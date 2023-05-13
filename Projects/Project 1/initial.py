@@ -19,6 +19,82 @@ import copy as cpy
 import numpy as np
 
 #############################################################
+########              Utility Functions              ########
+#############################################################
+
+
+def generate_random_states(state_len):
+    '''
+    generate random states for evaulating and testing
+    '''
+    arr = [i for i in range(state_len)]
+    np.random.shuffle(arr)
+    return arr
+
+
+def validate_state(problem_state: list) -> bool:
+    '''
+    check if the state passed is valid or not.
+    checks that state length is a perfect sqaure.
+    checks that all numbers are unique.
+    checks that numbers are in range 0-len(state)
+    '''
+
+    # get length of puzzle
+    # is it 8 puzzle, 15 puzzle etc
+    puzzle_size = len(problem_state)
+
+    # check that length is perfect square
+    sqrt = int(math.sqrt(puzzle_size))
+    if(sqrt*sqrt) != puzzle_size:
+        return False
+
+    # generate valid inputs.
+    # valid inputs range from 0 - n for n puzzle
+    valid_inputs = [i for i in range(puzzle_size)]
+
+    # put the problem state in a set to remove duplicates.
+    problem_state_set = set(problem_state)
+
+    for i in problem_state_set:
+        if i not in valid_inputs:
+            return False
+
+    return True
+
+
+list_of_8_puzzles = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    [1, 0, 2, 3, 4, 5, 6, 7, 8],
+    [1, 2, 0, 3, 4, 5, 6, 7, 8],
+    [1, 2, 3, 0, 4, 5, 6, 7, 8],
+    [1, 2, 3, 4, 0, 5, 6, 7, 8],
+    [1, 2, 3, 4, 5, 0, 6, 7, 8],
+    [1, 2, 3, 4, 5, 6, 0, 7, 8],
+    [1, 2, 3, 4, 5, 6, 7, 0, 8],
+    [1, 2, 3, 4, 5, 6, 7, 8, 0],
+]
+
+list_of_15_puzzles = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    [1, 2, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    [1, 2, 3, 0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    [1, 2, 3, 4, 0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    [1, 2, 3, 4, 5, 0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    [1, 2, 3, 4, 5, 6, 0, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    [1, 2, 3, 4, 5, 6, 7, 0, 8, 9, 10, 11, 12, 13, 14, 15],
+    [1, 2, 3, 4, 5, 6, 7, 8, 0, 9, 10, 11, 12, 13, 14, 15],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10, 11, 12, 13, 14, 15],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 11, 12, 13, 14, 15],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 12, 13, 14, 15],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 13, 14, 15],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0, 14, 15],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0, 15],
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0],
+]
+
+#############################################################
 ########    NODE CLASS AND CORRESPONDING FUNCTION    ########
 #############################################################
 
@@ -218,6 +294,48 @@ class Node():
         state_string = "".join([str(i) for i in state])
         return state_string
 
+# #############################################################
+# ########        BASIC TESTING AND VALIDATION         ########
+# #############################################################
+
+# puzz_length = 9
+# random_state = generate_random_states(puzz_length)
+# random_state = [1,3,6,5,0,2,4,7,8]
+
+# goal_state = [i for i in range(1,puzz_length)]
+# goal_state.append(0)
+
+# print ('random_state', random_state)
+# print ('goal_state', goal_state)
+
+# parent_node = Node(0, [], random_state, None)
+
+# parent_node.print_state()
+# print ('valid moves', parent_node.get_valid_moves())
+# print ('manhattan distance', parent_node.manhattan_distance_heuristic(goal_state))
+# print ('heuristic distance', parent_node.misplaced_tile_heuristic(goal_state))
+
+# print ('\n... solver ...\n')
+# def spawn_node_children(parent, goal, limit):
+
+#     if limit == 0:
+#         return
+
+#     # print (parent.state)
+#     # print (goal)
+#     if parent.state == goal:
+#         print ('----------- goal found ---------')
+#         parent.print_state(True)
+#         return
+
+#     child = parent.spawn_children()
+#     for c in child:
+#         # c.print_state(True)
+#         spawn_node_children(c, goal, limit-1)
+
+# parent_node.print_state(True)
+# spawn_node_children(parent_node,goal_state, 15)
+
 #############################################################
 ########               GENERAL SEARCH                ########
 #############################################################
@@ -291,52 +409,8 @@ def general_search(problem, queueing_function):
 
 
 #############################################################
-########              Utility Functions              ########
-#############################################################
-
-def generate_random_states(state_len):
-    '''
-    generate random states for evaulating and testing
-    '''
-    arr = [i for i in range(state_len)]
-    np.random.shuffle(arr)
-    return arr
-
-
-#############################################################
 ########      LANDING PAGE AND INPUT VALIDATION      ########
 #############################################################
-
-def validate_state(problem_state: list) -> bool:
-    '''
-    check if the state passed is valid or not.
-    checks that state length is a perfect sqaure.
-    checks that all numbers are unique.
-    checks that numbers are in range 0-len(state)
-    '''
-
-    # get length of puzzle
-    # is it 8 puzzle, 15 puzzle etc
-    puzzle_size = len(problem_state)
-
-    # check that length is perfect square
-    sqrt = int(math.sqrt(puzzle_size))
-    if(sqrt*sqrt) != puzzle_size:
-        return False
-
-    # generate valid inputs.
-    # valid inputs range from 0 - n for n puzzle
-    valid_inputs = [i for i in range(puzzle_size)]
-
-    # put the problem state in a set to remove duplicates.
-    problem_state_set = set(problem_state)
-
-    for i in problem_state_set:
-        if i not in valid_inputs:
-            return False
-
-    return True
-
 
 def main_block(clear_previous=True):
     '''

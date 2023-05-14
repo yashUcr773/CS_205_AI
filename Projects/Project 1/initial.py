@@ -228,7 +228,7 @@ class Node():
             # total_manhattan_distance+=abs(goal_state_colums-random_state_colums)+abs(goal_state_row-random_state_row)
 
             distance = abs(self.state.index(value) - goal_state.index(value))
-            total_manhattan_distance += distance/self.row_length + distance%self.row_length
+            total_manhattan_distance += distance/self.row_length + distance % self.row_length
 
         return int(total_manhattan_distance)
 
@@ -240,12 +240,12 @@ class Node():
         '''
 
         misplaced_count = 0
-        for idx,_ in enumerate(goal_state):
+        for idx, _ in enumerate(goal_state):
             if self.state[idx] != goal_state[idx]:
                 misplaced_count += 1
 
         return misplaced_count
-    
+
     def get_heuristic_cost(self, heuristic_measure, goal_state):
         '''
         get the heuristic value cost of expanding this node
@@ -362,13 +362,13 @@ class Node():
 #############################################################
 
 
-def make_queue(node: Node, goal_state:list, heuristic_measure: str):
+def make_queue(node: Node, goal_state: list, heuristic_measure: str):
     '''
     Initialize an empty queue.
     take in a node and add it to the queue.
     return the queue
     '''
-    return [(node.get_heuristic_cost(heuristic_measure, goal_state),node)]
+    return [(node.get_heuristic_cost(heuristic_measure, goal_state), node)]
 
 
 def is_queue_empty(queue: list):
@@ -404,6 +404,7 @@ def make_node_from_state(state: list):
     parent_node = Node(0, [], state, None)
     return parent_node
 
+
 def queueing_function(queue, children, heuristic_measure, goal_state):
     '''
     take in queue,
@@ -411,11 +412,12 @@ def queueing_function(queue, children, heuristic_measure, goal_state):
     put children in priority queue based on heuristic value
     return the queue
     '''
-    
+
     child_queue = []
     for child in children:
-        child_queue.append((child.get_heuristic_cost(heuristic_measure, goal_state),child))
-    
+        child_queue.append((child.get_heuristic_cost(
+            heuristic_measure, goal_state), child))
+
     return queue + child_queue
 
 
@@ -430,7 +432,8 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
     # queueing function adds the node in queue as required
     '''
 
-    nodes = make_queue(make_node_from_state(initial_state), goal_state, heuristic_measure)
+    nodes = make_queue(make_node_from_state(initial_state),
+                       goal_state, heuristic_measure)
 
     while True:
         if is_queue_empty(nodes):
@@ -442,17 +445,19 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
                 node.print_state(True)
                 return 'SUCCESS'
             else:
-                nodes = queueing_function(nodes, expand_nodes(node), heuristic_measure, goal_state)
+                nodes = queueing_function(nodes, expand_nodes(
+                    node), heuristic_measure, goal_state)
+
 
 trial_puzzles = [
-    [1,2,3,4,5,6,7,8,0],
-    [1,2,3,4,5,6,0,7,8],
-    [1,2,3,5,0,6,4,7,8],
-    [1,3,6,5,0,2,4,7,8],
-    [1,3,6,5,0,7,4,8,2],
-    [1,6,7,5,0,3,4,8,2],
-    [7,1,2,4,8,5,6,3,0],
-    [0,7,2,4,6,1,3,5,8],
+    [1, 2, 3, 4, 5, 6, 7, 8, 0],
+    [1, 2, 3, 4, 5, 6, 0, 7, 8],
+    [1, 2, 3, 5, 0, 6, 4, 7, 8],
+    [1, 3, 6, 5, 0, 2, 4, 7, 8],
+    [1, 3, 6, 5, 0, 7, 4, 8, 2],
+    [1, 6, 7, 5, 0, 3, 4, 8, 2],
+    [7, 1, 2, 4, 8, 5, 6, 3, 0],
+    [0, 7, 2, 4, 6, 1, 3, 5, 8],
 ]
 
 # #############################################################
@@ -465,20 +470,18 @@ for i in trial_puzzles:
     # random_state = [1,3,6,5,0,2,4,7,8]
     random_state = i
 
-    goal_state = [i for i in range(1,puzz_length)]
+    goal_state = [i for i in range(1, puzz_length)]
     goal_state.append(0)
 
-    print ('random_state', random_state)
-    print ('goal_state', goal_state)
+    print('random_state', random_state)
+    print('goal_state', goal_state)
 
     t0 = time.time()
     general_search(random_state, goal_state, queueing_function, 'MANHATTAN')
     t1 = time.time()
-    
-    print ('time', t1 - t0)
-    print ('--------------')
 
-
+    print('time', t1 - t0)
+    print('--------------')
 
 
 # #############################################################

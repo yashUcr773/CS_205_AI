@@ -17,6 +17,8 @@ import os
 import copy as cpy
 # for creating random states
 import numpy as np
+# to track the time used for execution
+import time
 
 #############################################################
 ########              Utility Functions              ########
@@ -221,12 +223,12 @@ class Node():
         total_manhattan_distance = 0
 
         for i in goal_state:
-            goal_state_row, goal_state_colums = self._get_row_col_position(
-                goal_state, i)
-            random_state_row, random_state_colums = self._get_row_col_position(
-                self.state, i)
-            total_manhattan_distance += abs(goal_state_colums - random_state_colums) + abs(
-                goal_state_row - random_state_row)
+            # goal_state_row, goal_state_colums=self._get_row_col_position(goal_state,i)
+            # random_state_row, random_state_colums=self._get_row_col_position(self.state,i)
+            # total_manhattan_distance+=abs(goal_state_colums-random_state_colums)+abs(goal_state_row-random_state_row)
+
+            distance = abs(self.state.index(i) - goal_state.index(i))
+            total_manhattan_distance += distance/self.row_length + distance%self.row_length
 
         return int(total_manhattan_distance)
 
@@ -243,6 +245,25 @@ class Node():
                 misplaced_count += 1
 
         return misplaced_count
+    
+    def get_heuristic_cost(self, heuristic_measure, goal_state):
+        '''
+        get the heuristic value cost of expanding this node
+        '''
+
+        g_n = self.depth
+        h_n = 0
+
+        if heuristic_measure == 'MANHATTAN':
+            h_n = self.manhattan_distance_heuristic(goal_state)
+        elif heuristic_measure == 'MISPLACED':
+            h_n = self.misplaced_tile_heuristic(goal_state)
+        elif heuristic_measure == 'UNIFORM':
+            h_n = 0
+        else:
+            h_n = 0
+
+        return g_n + h_n
 
     def print_state(self, verbose=False):
         '''
@@ -341,20 +362,20 @@ class Node():
 #############################################################
 
 
-def make_queue(node: Node):
+def make_queue(node: Node, goal_state:list, heuristic_measure: str):
     '''
     Initialize an empty queue.
     take in a node and add it to the queue.
     return the queue
     '''
-    return []
+    return [(node.get_heuristic_cost(heuristic_measure, goal_state),node)]
 
 
 def is_queue_empty(queue: list):
     '''
     take in queue and check if the queue is empty
     '''
-    pass
+    return False if len(queue) > 0 else True
 
 
 def remove_front(queue: list):
@@ -362,27 +383,43 @@ def remove_front(queue: list):
     take in queue and remove the first node
     return the first removed node
     '''
-    node = Node(1, 2, 3, 4)
-    return node
+    queue = sorted(queue, key=lambda x: x[0])
+    node = queue.pop(0)[1]
+    return queue, node
 
 
-def expand_nodes(node: Node, operators: list):
+def expand_nodes(node: Node):
     '''
     takes in node and operators and expands the node based on operators.
     returns a list of nodes
     '''
-    pass
+    children = node.spawn_children()
+    return children
 
 
 def make_node_from_state(state: list):
     '''
-    call in the Node function to spawn children after making vlaid moves
+    call in the Node class to create Parent Node
     '''
-    node = Node(1, 2, 3, 4)
-    return node
+    parent_node = Node(0, [], state, None)
+    return parent_node
+
+def queueing_function(queue, children, heuristic_measure, goal_state):
+    '''
+    take in queue,
+    take in children
+    put children in priority queue based on heuristic value
+    return the queue
+    '''
+    
+    child_queue = []
+    for child in children:
+        child_queue.append((child.get_heuristic_cost(heuristic_measure, goal_state),child))
+    
+    return queue + child_queue
 
 
-def general_search(problem, queueing_function):
+def general_search(initial_state, goal_state, queueing_function, heuristic_measure):
     '''
     # general search function
     # refered from the problem statement doc provided.
@@ -393,85 +430,121 @@ def general_search(problem, queueing_function):
     # queueing function adds the node in queue as required
     '''
 
-    nodes = make_queue(make_node_from_state(problem.initial_state))
+    nodes = make_queue(make_node_from_state(initial_state), goal_state, heuristic_measure)
 
     while True:
         if is_queue_empty(nodes):
             return 'FAILURE'
         else:
-            node = remove_front(nodes)
+            nodes, node = remove_front(nodes)
 
-            if problem.final_state(node.state):
+            if goal_state == node.state:
+                node.print_state(True)
                 return 'SUCCESS'
             else:
-                nodes = queueing_function(
-                    nodes, expand_nodes(node, problem.operators))
+                nodes = queueing_function(nodes, expand_nodes(node), heuristic_measure, goal_state)
+
+trial_puzzles = [
+    [1,2,3,4,5,6,7,8,0],
+    [1,2,3,4,5,6,0,7,8],
+    [1,2,3,5,0,6,4,7,8],
+    [1,3,6,5,0,2,4,7,8],
+    [1,3,6,5,0,7,4,8,2],
+    [1,6,7,5,0,3,4,8,2],
+    [7,1,2,4,8,5,6,3,0],
+    [0,7,2,4,6,1,3,5,8],
+]
+
+# #############################################################
+# ########       SEARCH TESTING AND VALIDATION         ########
+# #############################################################
+
+for i in trial_puzzles:
+    puzz_length = 9
+    random_state = generate_random_states(puzz_length)
+    # random_state = [1,3,6,5,0,2,4,7,8]
+    random_state = i
+
+    goal_state = [i for i in range(1,puzz_length)]
+    goal_state.append(0)
+
+    print ('random_state', random_state)
+    print ('goal_state', goal_state)
+
+    t0 = time.time()
+    general_search(random_state, goal_state, queueing_function, 'MANHATTAN')
+    t1 = time.time()
+    
+    print ('time', t1 - t0)
+    print ('--------------')
 
 
-#############################################################
-########      LANDING PAGE AND INPUT VALIDATION      ########
-#############################################################
-
-def main_block(clear_previous=True):
-    '''
-    print out landing page.
-    get algo choice
-    get input state
-    validate input
-    call the search function
-    '''
-
-    puzzle_state = 8
-
-    # clear screen before landing page
-    if clear_previous:
-        os.system('cls')
-
-    # main block
-    # Get algo choice
-    print(f'---- {puzzle_state} puzzle solver ----')
-    print('1. Uniform Cost Search')
-    print('2. A* with Misplaced Tile')
-    print('3. A* with Manahattan Distance')
-    algo_choice = int(input('Enter choice: '))
-
-    if algo_choice not in [1, 2, 3]:
-        os.system('cls')
-        print('Please enter correct choice.\n')
-        main_block(clear_previous=False)
-        return
-
-    # get input puzzle state
-    # TODO : Add code to choose between default puzzle and input state
-    # TODO : Add code to let user input goal state as well
-    print('\nEnter the numbers in puzzle as space seperated list.')
-    print('Represent blank with 0')
-    print('For Example: 1 2 3 4 0 5 6 7 8\n')
-    problem_input = input('Numbers: ')
-    problem_state = problem_input.split(' ')
-
-    # convert string to integers
-    problem_state = [int(i) for i in problem_state]
-
-    if not validate_state(problem_state):
-        os.system('cls')
-        print('Pleae enter valid input state.\n')
-        main_block(clear_previous=False)
-        return
-
-    os.system('cls')
-    print('Initial State\n')
-    parent_node = Node(0, [], problem_state, None)
-    parent_node.print_state()
-
-    if algo_choice == 1:
-        print('\nSolving for Uniform cost\n')
-    elif algo_choice == 1:
-        print('\nSolving for A* with Misplaced Tile\n')
-    elif algo_choice == 1:
-        print('\nSolving for A* with Manahattan Distance\n')
-
-    return
 
 
-main_block()
+# #############################################################
+# ########      LANDING PAGE AND INPUT VALIDATION      ########
+# #############################################################
+
+# def main_block(clear_previous=True):
+#     '''
+#     print out landing page.
+#     get algo choice
+#     get input state
+#     validate input
+#     call the search function
+#     '''
+
+#     puzzle_state = 8
+
+#     # clear screen before landing page
+#     if clear_previous:
+#         os.system('cls')
+
+#     # main block
+#     # Get algo choice
+#     print(f'---- {puzzle_state} puzzle solver ----')
+#     print('1. Uniform Cost Search')
+#     print('2. A* with Misplaced Tile')
+#     print('3. A* with Manahattan Distance')
+#     algo_choice = int(input('Enter choice: '))
+
+#     if algo_choice not in [1, 2, 3]:
+#         os.system('cls')
+#         print('Please enter correct choice.\n')
+#         main_block(clear_previous=False)
+#         return
+
+#     # get input puzzle state
+#     # TODO : Add code to choose between default puzzle and input state
+#     # TODO : Add code to let user input goal state as well
+#     print('\nEnter the numbers in puzzle as space seperated list.')
+#     print('Represent blank with 0')
+#     print('For Example: 1 2 3 4 0 5 6 7 8\n')
+#     problem_input = input('Numbers: ')
+#     problem_state = problem_input.split(' ')
+
+#     # convert string to integers
+#     problem_state = [int(i) for i in problem_state]
+
+#     if not validate_state(problem_state):
+#         os.system('cls')
+#         print('Pleae enter valid input state.\n')
+#         main_block(clear_previous=False)
+#         return
+
+#     os.system('cls')
+#     print('Initial State\n')
+#     parent_node = Node(0, [], problem_state, None)
+#     parent_node.print_state()
+
+#     if algo_choice == 1:
+#         print('\nSolving for Uniform cost\n')
+#     elif algo_choice == 1:
+#         print('\nSolving for A* with Misplaced Tile\n')
+#     elif algo_choice == 1:
+#         print('\nSolving for A* with Manahattan Distance\n')
+
+#     return
+
+
+# main_block()

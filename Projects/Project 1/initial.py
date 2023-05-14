@@ -15,10 +15,10 @@ import math
 import os
 # to make deep copies of nodes' states
 import copy as cpy
-# for creating random states
-import numpy as np
 # to track the time used for execution
 import time
+# for creating random states
+import numpy as np
 
 #############################################################
 ########              Utility Functions              ########
@@ -58,8 +58,8 @@ def validate_state(problem_state: list) -> bool:
     # put the problem state in a set to remove duplicates.
     problem_state_set = set(problem_state)
 
-    for i in problem_state_set:
-        if i not in valid_inputs:
+    for value in problem_state_set:
+        if value not in valid_inputs:
             return False
 
     return True
@@ -156,22 +156,22 @@ class Node():
             if move == 'U':
                 path.append('U')
                 state_copy[blank_idx], state_copy[blank_idx -
-                                                  self.row_length] = state_copy[blank_idx-self.row_length], state_copy[blank_idx]
+                                                  self.row_length] = state_copy[blank_idx - self.row_length], state_copy[blank_idx]
 
             elif move == 'L':
                 path.append('L')
                 state_copy[blank_idx], state_copy[blank_idx -
-                                                  1] = state_copy[blank_idx-1], state_copy[blank_idx]
+                                                  1] = state_copy[blank_idx - 1], state_copy[blank_idx]
 
             elif move == 'R':
                 path.append('R')
                 state_copy[blank_idx], state_copy[blank_idx +
-                                                  1] = state_copy[blank_idx+1], state_copy[blank_idx]
+                                                  1] = state_copy[blank_idx + 1], state_copy[blank_idx]
 
             elif move == 'D':
                 path.append('D')
                 state_copy[blank_idx], state_copy[blank_idx +
-                                                  self.row_length] = state_copy[blank_idx+self.row_length], state_copy[blank_idx],
+                                                  self.row_length] = state_copy[blank_idx + self.row_length], state_copy[blank_idx],
 
             if not self._is_state_already_generated(state_copy):
                 child_node = Node(self.depth+1, path, state_copy, self)
@@ -222,12 +222,12 @@ class Node():
 
         total_manhattan_distance = 0
 
-        for i in goal_state:
+        for value in goal_state:
             # goal_state_row, goal_state_colums=self._get_row_col_position(goal_state,i)
             # random_state_row, random_state_colums=self._get_row_col_position(self.state,i)
             # total_manhattan_distance+=abs(goal_state_colums-random_state_colums)+abs(goal_state_row-random_state_row)
 
-            distance = abs(self.state.index(i) - goal_state.index(i))
+            distance = abs(self.state.index(value) - goal_state.index(value))
             total_manhattan_distance += distance/self.row_length + distance%self.row_length
 
         return int(total_manhattan_distance)
@@ -240,8 +240,8 @@ class Node():
         '''
 
         misplaced_count = 0
-        for i in range(len(goal_state)):
-            if self.state[i] != goal_state[i]:
+        for idx,_ in enumerate(goal_state):
+            if self.state[idx] != goal_state[idx]:
                 misplaced_count += 1
 
         return misplaced_count

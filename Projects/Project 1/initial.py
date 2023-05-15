@@ -35,6 +35,13 @@ color_map = {
     UNIFORM: 'blue',
 }
 
+direction_map = {
+    'R': 'Right',
+    'L': 'Left',
+    'U': 'Up',
+    'D': 'Down'
+}
+
 #############################################################
 ########               LIST OF PUZZLES               ########
 #############################################################
@@ -74,7 +81,7 @@ list_of_hard_puzzles = [
     ([5, 2, 1, 0, 8, 4, 7, 3, 6], 25),
     ([6, 3, 1, 4, 0, 7, 8, 2, 5], 26),
     ([4, 0, 7, 2, 6, 5, 8, 1, 3], 27),
-    ([8, 6, 4, 2, 0, 7, 3, 1, 5], 28),
+    ([6, 4, 7, 3, 2, 8, 0, 5, 1], 28),
     ([5, 2, 1, 3, 8, 4, 6, 0, 7], 29),
     ([6, 4, 7, 8, 3, 5, 1, 2, 0], 30),
 ]
@@ -150,6 +157,13 @@ def print_time(time_input):
         print (f'time taken is {time_input} secs')
     else:
         print_formatted_time(time_input)
+
+def print_trace(node, goal_state):
+    if node == None:
+        return
+    
+    print_trace(node.parent, goal_state)
+    node.print_trace_info(goal_state)
 
 #############################################################
 ########    NODE CLASS AND CORRESPONDING FUNCTION    ########
@@ -274,38 +288,33 @@ class Node():
         get value for manhattan distance for a current state and goal state
         manhattan distance is the shortest distance a tile needs to be moved to get to correct position
         total distance is sum of all individual distances
-        includes blank for calculation
+        does not include blank for calculation
         '''
 
         total_manhattan_distance = 0
 
-        # for i in goal_state:
-        #     if i == 0:
-        #         continue
+        for i in goal_state:
+            if i == 0:
+                continue
 
-        #     distance = abs(self.state.index(i) - goal_state.index(i))
-        #     total_manhattan_distance += distance/self.row_length + distance%self.row_length
+            goal_state_row, goal_state_colums=self._get_row_col_position(goal_state,i)
+            random_state_row, random_state_colums=self._get_row_col_position(self.state,i)
+            total_manhattan_distance+=abs(goal_state_colums-random_state_colums)+abs(goal_state_row-random_state_row)
 
-        # return int(total_manhattan_distance)
-
-        for i in range(1, self.row_length*self.row_length):
-            distance = abs(self.state.index(i) - goal_state.index(i))
-
-            #manhattan distance between the current state and goal state
-            total_manhattan_distance = total_manhattan_distance + \
-                distance/self.row_length + distance % self.row_length
-
-        return total_manhattan_distance
+        return int(total_manhattan_distance)
 
     def misplaced_tile_heuristic(self, goal_state):
         '''
         get value of misplaced tile heuristic for a current state and goal state.
         misplaced tile distance is the count of all the tiles that are not in correct position
-        includes blank for calculation
+        does not include blank for calculation
         '''
 
         misplaced_count = 0
         for i in range(len(goal_state)):
+            if i == 0:
+                continue
+            
             if self.state[i] != goal_state[i]:
                 misplaced_count += 1
 
@@ -339,6 +348,22 @@ class Node():
             print('depth', self.depth)
             print('path', self.path)
 
+        self._print_horizontal_divider(self.state_length)
+        for i in range(self.state_length):
+            print(f'| {self.state[i]:2} |', end="")
+            if (i+1) % self.row_length == 0:
+                self._print_horizontal_divider(self.state_length)
+        print()
+    
+    def print_trace_info(self, goal_state):
+
+        if len(self.path):
+            print (f'The best state to expand with g(n): {self.depth} and h(n): {self.manhattan_distance_heuristic(goal_state)}')
+            print ('Move blank to: ', direction_map[self.path[-1]])
+            print ('Updated State', end = '')
+        else:
+            print ('\nProblem State', end = '')
+        
         self._print_horizontal_divider(self.state_length)
         for i in range(self.state_length):
             print(f'| {self.state[i]:2} |', end="")
@@ -501,10 +526,25 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 #     print('goal_state', goal_state)
 
 #     t0 = time.time()
-#     general_search(puzzle, goal_state, queueing_function, 'MANHATTAN', verbose=True)
+#     general_search(puzzle, goal_state, queueing_function, MANHATTAN, verbose=True)
 #     t1 = time.time()
 
 #     print('time', t1 - t0)
+
+# #############################################################
+# ####          Generate and display Traceback         ########
+# #############################################################
+
+# puzzle, true_depth = list_of_easy_puzzles[np.random.choice(len(list_of_easy_puzzles))]
+
+# goal_state = [i for i in range(1, len(puzzle))]
+# goal_state.append(0)
+
+# print(f'The True Depth of the puzzle is: {true_depth}\n')
+
+# final_node, _, _ = general_search(puzzle, goal_state, queueing_function, MANHATTAN, verbose=False)
+
+# print_trace(final_node, goal_state)
 
 # # #############################################################
 # # ########  UI LANDING PAGE AND INPUT VALIDATION       ########
@@ -620,7 +660,7 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 
 #         print('\nSolving for Uniform cost\n')
 #         time_before = time.time()
-#         general_search(problem_state, goal_state, queueing_function, UNIFORM, verbose=True)
+#         final_node, _, _ = general_search(problem_state, goal_state, queueing_function, UNIFORM, verbose=True)
 #         time_after = time.time()
 #         total_time = time_after - time_before
 #         print_time(total_time)
@@ -629,7 +669,7 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 
 #         print('\nSolving for A* with Misplaced Tile\n')
 #         time_before = time.time()
-#         general_search(problem_state, goal_state, queueing_function, MISPLACED, verbose=True)
+#         final_node, _, _ = general_search(problem_state, goal_state, queueing_function, MISPLACED, verbose=True)
 #         time_after = time.time()
 #         total_time = time_after - time_before
 #         print_time(total_time)
@@ -639,10 +679,25 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 
 #         print('\nSolving for A* with Manahattan Distance\n')
 #         time_before = time.time()
-#         general_search(problem_state, goal_state, queueing_function, MANHATTAN, verbose=True)
+#         final_node, _, _ = general_search(problem_state, goal_state, queueing_function, MANHATTAN, verbose=True)
 #         time_after = time.time()
 #         total_time = time_after - time_before
 #         print_time(total_time)
+
+#     # Print Traceback
+#     print('\n---- Want to print the puzzle traceback? ----')
+#     print('1. Yes')
+#     print('2. No. Exit')
+#     traceback_choice = int(input('Enter choice: '))
+
+#     if traceback_choice not in [1, 2]:
+#         os.system('cls')
+#         print('Please enter correct choice.\n')
+#         main_block(clear_previous=False)
+#         return
+    
+#     if traceback_choice == 1:
+#         print_trace(final_node, goal_state)
 
 
 #     return
@@ -650,111 +705,113 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 
 # main_block()
 
-#############################################################
-########     Multiple TESTS and Result Analysis      ########
-#############################################################
+# #############################################################
+# ########     Multiple TESTS and Result Analysis      ########
+# #############################################################
 
-combined_puzzles_list = list_of_easy_puzzles + list_of_medium_puzzles + list_of_hard_puzzles
-goal_state = [1,2,3,4,5,6,7,8,0]
+# combined_puzzles_list = list_of_easy_puzzles + list_of_medium_puzzles + list_of_hard_puzzles
+# goal_state = [1,2,3,4,5,6,7,8,0]
 
-time_collection = {}
-queue_collection = {}
-nodes_collection = {}
+# time_collection = {}
+# queue_collection = {}
+# nodes_collection = {}
 
-for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
-    time_collection[heuristic] = []
-    queue_collection[heuristic] = []
-    nodes_collection[heuristic] = []
+# for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+#     time_collection[heuristic] = []
+#     queue_collection[heuristic] = []
+#     nodes_collection[heuristic] = []
 
 
-for puzzle, true_depth in combined_puzzles_list:
-    for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
-        print (heuristic, puzzle, true_depth)
-        time_before = time.time()
-        final_node, max_queue, total_nodes = general_search(puzzle, goal_state, queueing_function, heuristic, verbose=False)
-        time_after = time.time()
-        total_time = time_after - time_before
-        print (final_node.depth)
+# for puzzle, true_depth in combined_puzzles_list:
+#     for heuristic in [MANHATTAN]:
+#         print (heuristic, puzzle, true_depth)
+#         time_before = time.time()
+#         final_node, max_queue, total_nodes = general_search(puzzle, goal_state, queueing_function, heuristic, verbose=False)
+#         time_after = time.time()
+#         total_time = time_after - time_before
+#         print (final_node.depth)
         
-        time_collection[heuristic].append((true_depth, total_time))
-        queue_collection[heuristic].append((true_depth, max_queue))
-        nodes_collection[heuristic].append((true_depth, total_nodes))
-    print ()
+#         time_collection[heuristic].append((true_depth, total_time))
+#         queue_collection[heuristic].append((true_depth, max_queue))
+#         nodes_collection[heuristic].append((true_depth, total_nodes))
+#     print ()
 
-plt.figure(1)
-for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
-    temp_arr = np.array(time_collection[heuristic])
-    plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
+# plt.figure(1)
+# for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+#     temp_arr = np.array(time_collection[heuristic])
+#     plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
 
-plt.title('Time vs Depth')
-plt.xlabel('depth')
-plt.ylabel('time in seconds')
-plt.grid()
-plt.legend()
-plt.show()
+# plt.title('Time vs Depth')
+# plt.xlabel('depth')
+# plt.ylabel('time in seconds')
+# plt.grid()
+# plt.legend()
+# plt.show()
 
-plt.figure(2)
-for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
-    temp_arr = np.array(nodes_collection[heuristic])
-    plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
+# plt.figure(2)
+# for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+#     temp_arr = np.array(nodes_collection[heuristic])
+#     plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
 
-plt.title('Nodes Expanded vs Depth')
-plt.xlabel('depth')
-plt.ylabel('Nodes Expanded')
-plt.grid()
-plt.legend()
-plt.show()
+# plt.title('Nodes Expanded vs Depth')
+# plt.xlabel('depth')
+# plt.ylabel('Nodes Expanded')
+# plt.grid()
+# plt.legend()
+# plt.show()
 
-plt.figure(3)
-for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
-    temp_arr = np.array(queue_collection[heuristic])
-    plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
+# plt.figure(3)
+# for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+#     temp_arr = np.array(queue_collection[heuristic])
+#     plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
 
-plt.title('Max Queue Size vs Depth')
-plt.xlabel('depth')
-plt.ylabel('Max Queue Size')
-plt.grid()
-plt.legend()
-plt.show()
+# plt.title('Max Queue Size vs Depth')
+# plt.xlabel('depth')
+# plt.ylabel('Max Queue Size')
+# plt.grid()
+# plt.legend()
+# plt.show()
 
-# #############################################################
-# ########    Generating puzzles at different depths   ########
-# #############################################################
+#############################################################
+########    Generating puzzles at different depths   ########
+#############################################################
 
-# # https://www.geeksforgeeks.org/check-instance-8-puzzle-solvable/
+# https://www.geeksforgeeks.org/check-instance-8-puzzle-solvable/
 
-# def getInvCount(arr):
-#     inv_count = 0
-#     empty_value = 0
-#     for i in range(0, 9):
-#         for j in range(i + 1, 9):
-#             if arr[j] != empty_value and arr[i] != empty_value and arr[i] > arr[j]:
-#                 inv_count += 1
-#     return inv_count
+def getInvCount(arr):
+    inv_count = 0
+    empty_value = 0
+    for i in range(0, 9):
+        for j in range(i + 1, 9):
+            if arr[j] != empty_value and arr[i] != empty_value and arr[i] > arr[j]:
+                inv_count += 1
+    return inv_count
  
-# def isSolvable(puzzle) :
+def isSolvable(puzzle) :
  
-#     # Count inversions in given 8 puzzle
-#     inv_count = getInvCount(puzzle)
+    # Count inversions in given 8 puzzle
+    inv_count = getInvCount(puzzle)
  
-#     # return true if inversion count is even.
-#     return (inv_count % 2 == 0)
+    # return true if inversion count is even.
+    return (inv_count % 2 == 0)
 
-# puzzle_book = {}
-# for i in range(30):
+puzzle_book = {}
+for i in range(30000):
     
-#     random_state = generate_random_states(9)
-#     if (isSolvable(random_state)):
+    random_state = generate_random_states(9)
+    if (isSolvable(random_state)):
         
-#         goal_state = [1,2,3,4,5,6,7,8,0]
-#         final_node, _,_ = general_search(random_state, goal_state, queueing_function, MANHATTAN, verbose=False)
+        goal_state = [1,2,3,4,5,6,7,8,0]
+        final_node, _,_ = general_search(random_state, goal_state, queueing_function, MANHATTAN, verbose=False)
         
-#         if final_node.depth not in puzzle_book:
-#             puzzle_book[final_node.depth] = []
+        # if final_node.depth not in puzzle_book:
+        #     puzzle_book[final_node.depth] = []
 
-#         puzzle_book[final_node.depth].append(random_state)
+        # puzzle_book[final_node.depth].append(random_state)
+        if final_node.depth == 28:
+            print (random_state)
 
-# print (puzzle_book)
+print (puzzle_book)
 
 # #############################################################
 # ########  Pretty Print Puzzles to display in Report  ########

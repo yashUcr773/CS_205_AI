@@ -19,6 +19,8 @@ import copy as cpy
 import time
 # for creating random states
 import numpy as np
+# for plotting results and graphs
+import matplotlib.pyplot as plt
 
 #############################################################
 ########                  CONSTANTS                  ########
@@ -27,40 +29,54 @@ UNIFORM = 'Uniform'
 MISPLACED = 'Misplaced'
 MANHATTAN = 'Manhattan'
 
+color_map = {
+    MANHATTAN: 'red',
+    MISPLACED: 'green',
+    UNIFORM: 'blue',
+}
+
 #############################################################
 ########               LIST OF PUZZLES               ########
 #############################################################
 
 list_of_easy_puzzles = [
     ([1, 2, 3, 4, 5, 6, 7, 8, 0], 0),
-    ([1, 2, 3, 4, 0, 5, 7, 8, 6], 2),
+    ([1, 2, 3, 4, 5, 6, 7, 0, 8], 1),
     ([1, 2, 3, 4, 5, 6, 0, 7, 8], 2),
-    ([1, 2, 3, 7, 4, 5, 0, 8, 6], 4),
+    ([1, 0, 3, 4, 2, 5, 7, 8, 6], 3),
     ([1, 2, 3, 5, 0, 6, 4, 7, 8], 4),
-    ([1, 2, 3, 4, 8, 0, 7, 6, 5], 5),
-    ([4, 1, 3, 7, 2, 6, 5, 8, 0], 8),
+    ([2, 0, 3, 1, 5, 6, 4, 7, 8], 5),
+    ([2, 5, 3, 1, 0, 6, 4, 7, 8], 6),
+    ([4, 1, 2, 5, 8, 3, 7, 0, 6], 7),
     ([1, 3, 6, 5, 0, 2, 4, 7, 8], 8),
-    ([1, 6, 2, 5, 3, 0, 4, 7, 8], 9),
+    ([2, 5, 3, 0, 7, 6, 1, 4, 8], 9),
 ]
 
 list_of_medium_puzzles = [
-    ([5, 1, 2, 6, 3, 0, 4, 7, 8], 11),
+    ([2, 3, 5, 1, 4, 6, 0, 7, 8], 10),
+    ([1, 4, 2, 7, 8, 3, 5, 0, 6], 11),
     ([1, 3, 6, 5, 0, 7, 4, 8, 2], 12),
-    ([1, 2, 6, 3, 5, 0, 4, 7, 8], 13),
+    ([7, 2, 3, 0, 5, 6, 1, 4, 8], 13),
+    ([1, 5, 0, 3, 2, 4, 7, 8, 6], 14),
+    ([4, 2, 1, 0, 3, 6, 7, 5, 8], 15),
     ([1, 6, 7, 5, 0, 3, 4, 8, 2], 16),
-    ([3, 5, 6, 1, 4, 8, 0, 7, 2], 16),
-    ([4, 3, 6, 8, 7, 1, 0, 5, 2], 18),
+    ([4, 8, 1, 0, 3, 5, 2, 7, 6], 17),
+    ([7, 5, 3, 1, 4, 6, 2, 8, 0], 18),
+    ([5, 4, 6, 3, 1, 2, 7, 0, 8], 19),
 ]
 
 list_of_hard_puzzles = [
     ([7, 1, 2, 4, 8, 5, 6, 3, 0], 20),
-    ([3, 0, 2, 6, 5, 1, 4, 7, 8], 21),
-    ([0, 1, 2, 3, 4, 5, 6, 7, 8], 22),
-    ([5, 0, 3, 2, 8, 4, 6, 7, 1], 23),
+    ([3, 5, 4, 8, 7, 0, 2, 6, 1], 21),
+    ([7, 1, 8, 5, 0, 3, 6, 4, 2], 22),
+    ([1, 0, 8, 4, 7, 2, 3, 5, 6], 23),
     ([0, 7, 2, 4, 6, 1, 3, 5, 8], 24),
-    ([8, 7, 4, 3, 2, 0, 6, 5, 1], 25),
-    ([8, 7, 6, 5, 4, 3, 0, 2, 1], 28),
-    ([8, 7, 6, 5, 4, 3, 2, 1, 0], 30),
+    ([5, 2, 1, 0, 8, 4, 7, 3, 6], 25),
+    ([6, 3, 1, 4, 0, 7, 8, 2, 5], 26),
+    ([4, 0, 7, 2, 6, 5, 8, 1, 3], 27),
+    ([8, 6, 4, 2, 0, 7, 3, 1, 5], 28),
+    ([5, 2, 1, 3, 8, 4, 6, 0, 7], 29),
+    ([6, 4, 7, 8, 3, 5, 1, 2, 0], 30),
 ]
 
 #############################################################
@@ -106,6 +122,34 @@ def validate_state(problem_state: list) -> bool:
             return False
 
     return True
+
+
+def print_formatted_time(time_input):
+    hrs = int(time_input // 3600)
+    mins = int((time_input % 3600) // 60) 
+    secs = int((time_input % 3600) % 60 )
+    if hrs:
+        print (f'time taken is {hrs} hrs, {mins} mins and {secs} secs')
+    elif mins:
+        print (f'time taken is {mins} mins and {secs} secs')
+    else:
+        print (f'time taken is {secs} secs')
+
+def print_time(time_input):
+    if time_input <= 1e-5:
+        print (f'time taken is {time_input:.6f} secs')
+    elif time_input <= 1e-4:
+        print (f'time taken is {time_input:.5f} secs')
+    elif time_input <= 1e-3:
+        print (f'time taken is {time_input:.4f} secs')
+    elif time_input <= 1e-2:
+        print (f'time taken is {time_input:.3f} secs')
+    elif time_input <= 1e-1:
+        print (f'time taken is {time_input:.2f} secs')
+    elif time_input >= 0 and time_input <= 1:
+        print (f'time taken is {time_input} secs')
+    else:
+        print_formatted_time(time_input)
 
 #############################################################
 ########    NODE CLASS AND CORRESPONDING FUNCTION    ########
@@ -405,7 +449,7 @@ def queueing_function(queue, children, heuristic_measure, goal_state):
     return queue
 
 
-def general_search(initial_state, goal_state, queueing_function, heuristic_measure):
+def general_search(initial_state, goal_state, queueing_function, heuristic_measure, verbose=False):
     '''
     # general search function
     # refered from the problem statement doc provided.
@@ -418,17 +462,29 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 
     nodes = make_queue(make_node_from_state(initial_state),
                        goal_state, heuristic_measure)
+    
+    total_nodes_expanded = 0
+    max_queue_size = 0
 
     while True:
+
+        max_queue_size = max(max_queue_size, len(nodes))
+
         if is_queue_empty(nodes):
-            return 'FAILURE'
+            print ("FAILURE")
+            return -1, total_nodes_expanded, max_queue_size
         else:
             nodes, node = remove_front(nodes)
 
             if goal_state == node.state:
-                node.print_state(True)
-                return 'SUCCESS'
+                if verbose :
+                    print ("SUCCESS")
+                    node.print_state(True)
+                    print ('Total nodes Expanded : ',total_nodes_expanded)
+                    print ('Max Queue Size : ',max_queue_size)
+                return node, max_queue_size, total_nodes_expanded
             else:
+                total_nodes_expanded += 1
                 nodes = queueing_function(nodes, expand_nodes(
                     node), heuristic_measure, goal_state)
 
@@ -445,149 +501,271 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 #     print('goal_state', goal_state)
 
 #     t0 = time.time()
-#     general_search(puzzle, goal_state, queueing_function, 'MANHATTAN')
+#     general_search(puzzle, goal_state, queueing_function, 'MANHATTAN', verbose=True)
 #     t1 = time.time()
 
 #     print('time', t1 - t0)
 
+# # #############################################################
+# # ########  UI LANDING PAGE AND INPUT VALIDATION       ########
+# # #############################################################
+
+
+# def main_block(clear_previous=True):
+#     '''
+#     print out landing page.
+#     get algo choice
+#     get input state
+#     validate input
+#     call the search function
+#     '''
+
+#     # clear screen before landing page
+#     if clear_previous:
+#         os.system('cls')
+
+#     # main block
+#     # Get algo choice
+#     print('---- N Puzzle Solver ----')
+#     print('1. Uniform Cost Search')
+#     print('2. A* with Misplaced Tile')
+#     print('3. A* with Manahattan Distance')
+#     algo_choice = int(input('Enter choice: '))
+
+#     if algo_choice not in [1, 2, 3]:
+#         os.system('cls')
+#         print('Please enter correct choice.\n')
+#         main_block(clear_previous=False)
+#         return
+
+#     # Get Puzzle choice
+#     print('\n---- Choose Puzzle Type ----')
+#     print('1. Random Default Easy (depth 0-9)')
+#     print('2. Random Default Medium (depth 10-19)')
+#     print('3. Random Default Hard (depth >20)')
+#     print('4. Custom Puzzle')
+#     puzzle_choice = int(input('Enter choice: '))
+
+#     if puzzle_choice not in [1, 2, 3, 4]:
+#         os.system('cls')
+#         print('Please enter correct choice.\n')
+#         main_block(clear_previous=False)
+#         return
+
+#     # get input puzzle state
+#     problem_state = []
+#     if puzzle_choice == 1:
+#         problem_state = list_of_easy_puzzles[np.random.choice(len(list_of_easy_puzzles))][0]
+#     elif puzzle_choice == 2:
+#         problem_state = list_of_medium_puzzles[np.random.choice(len(list_of_medium_puzzles))][0]
+#     elif puzzle_choice == 3:
+#         problem_state = list_of_hard_puzzles[np.random.choice(len(list_of_hard_puzzles))][0]
+#     elif puzzle_choice == 4:
+#         print('\nEnter the numbers in puzzle as space seperated list.')
+#         print('Represent blank with 0')
+#         print('For Example: 1 2 3 4 0 5 6 7 8\n')
+#         problem_input = input('Numbers: ')
+#         problem_state = problem_input.split(' ')
+
+#         # convert string to integers
+#         problem_state = [int(i) for i in problem_state]
+
+#         if not validate_state(problem_state):
+#             os.system('cls')
+#             print('Pleae enter valid input state.\n')
+#             main_block(clear_previous=False)
+#             return
+
+#     # Get Puzzle choice
+#     print('\n---- Enter Goal State ----')
+#     print('1. Default State (1 2 3 4 5 6 ... n-1 n 0)')
+#     print('2. Custom Goal')
+#     puzzle_choice = int(input('Enter choice: '))
+
+#     if puzzle_choice not in [1, 2]:
+#         os.system('cls')
+#         print('Please enter correct choice.\n')
+#         main_block(clear_previous=False)
+#         return
+
+#     # get goal state
+#     goal_state = []
+#     if puzzle_choice == 1:
+
+#         goal_state = list(range(1, len(problem_state)))
+#         goal_state.append(0)
+
+#     elif puzzle_choice == 4:
+#         print('\nEnter the numbers in puzzle as space seperated list.')
+#         print('Represent blank with 0')
+#         print('For Example: 1 2 3 4 0 5 6 7 8\n')
+#         problem_input = input('Numbers: ')
+#         goal_state = problem_input.split(' ')
+
+#         # convert string to integers
+#         goal_state = [int(i) for i in goal_state]
+
+#         if not validate_state(goal_state):
+#             os.system('cls')
+#             print('Pleae enter valid input state.\n')
+#             main_block(clear_previous=False)
+#             return
+
+#     os.system('cls')
+#     print('Initial State\n')
+#     parent_node = Node(0, [], problem_state, None)
+#     parent_node.print_state()
+
+#     if algo_choice == 1:
+
+#         print('\nSolving for Uniform cost\n')
+#         time_before = time.time()
+#         general_search(problem_state, goal_state, queueing_function, UNIFORM, verbose=True)
+#         time_after = time.time()
+#         total_time = time_after - time_before
+#         print_time(total_time)
+
+#     elif algo_choice == 2:
+
+#         print('\nSolving for A* with Misplaced Tile\n')
+#         time_before = time.time()
+#         general_search(problem_state, goal_state, queueing_function, MISPLACED, verbose=True)
+#         time_after = time.time()
+#         total_time = time_after - time_before
+#         print_time(total_time)
+
+
+#     elif algo_choice == 3:
+
+#         print('\nSolving for A* with Manahattan Distance\n')
+#         time_before = time.time()
+#         general_search(problem_state, goal_state, queueing_function, MANHATTAN, verbose=True)
+#         time_after = time.time()
+#         total_time = time_after - time_before
+#         print_time(total_time)
+
+
+#     return
+
+
+# main_block()
+
+#############################################################
+########     Multiple TESTS and Result Analysis      ########
+#############################################################
+
+combined_puzzles_list = list_of_easy_puzzles + list_of_medium_puzzles + list_of_hard_puzzles
+goal_state = [1,2,3,4,5,6,7,8,0]
+
+time_collection = {}
+queue_collection = {}
+nodes_collection = {}
+
+for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+    time_collection[heuristic] = []
+    queue_collection[heuristic] = []
+    nodes_collection[heuristic] = []
+
+
+for puzzle, true_depth in combined_puzzles_list:
+    for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+        print (heuristic, puzzle, true_depth)
+        time_before = time.time()
+        final_node, max_queue, total_nodes = general_search(puzzle, goal_state, queueing_function, heuristic, verbose=False)
+        time_after = time.time()
+        total_time = time_after - time_before
+        print (final_node.depth)
+        
+        time_collection[heuristic].append((true_depth, total_time))
+        queue_collection[heuristic].append((true_depth, max_queue))
+        nodes_collection[heuristic].append((true_depth, total_nodes))
+    print ()
+
+plt.figure(1)
+for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+    temp_arr = np.array(time_collection[heuristic])
+    plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
+
+plt.title('Time vs Depth')
+plt.xlabel('depth')
+plt.ylabel('time in seconds')
+plt.grid()
+plt.legend()
+plt.show()
+
+plt.figure(2)
+for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+    temp_arr = np.array(nodes_collection[heuristic])
+    plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
+
+plt.title('Nodes Expanded vs Depth')
+plt.xlabel('depth')
+plt.ylabel('Nodes Expanded')
+plt.grid()
+plt.legend()
+plt.show()
+
+plt.figure(3)
+for heuristic in [MANHATTAN, UNIFORM, MISPLACED]:
+    temp_arr = np.array(queue_collection[heuristic])
+    plt.plot(temp_arr[:,0], temp_arr[:,1], color = color_map[heuristic], label=heuristic)
+
+plt.title('Max Queue Size vs Depth')
+plt.xlabel('depth')
+plt.ylabel('Max Queue Size')
+plt.grid()
+plt.legend()
+plt.show()
+
 # #############################################################
-# ########  UI LANDING PAGE AND INPUT VALIDATION       ########
+# ########    Generating puzzles at different depths   ########
 # #############################################################
 
+# # https://www.geeksforgeeks.org/check-instance-8-puzzle-solvable/
 
-def main_block(clear_previous=True):
-    '''
-    print out landing page.
-    get algo choice
-    get input state
-    validate input
-    call the search function
-    '''
+# def getInvCount(arr):
+#     inv_count = 0
+#     empty_value = 0
+#     for i in range(0, 9):
+#         for j in range(i + 1, 9):
+#             if arr[j] != empty_value and arr[i] != empty_value and arr[i] > arr[j]:
+#                 inv_count += 1
+#     return inv_count
+ 
+# def isSolvable(puzzle) :
+ 
+#     # Count inversions in given 8 puzzle
+#     inv_count = getInvCount(puzzle)
+ 
+#     # return true if inversion count is even.
+#     return (inv_count % 2 == 0)
 
-    # clear screen before landing page
-    if clear_previous:
-        os.system('cls')
-
-    # main block
-    # Get algo choice
-    print('---- N Puzzle Solver ----')
-    print('1. Uniform Cost Search')
-    print('2. A* with Misplaced Tile')
-    print('3. A* with Manahattan Distance')
-    algo_choice = int(input('Enter choice: '))
-
-    if algo_choice not in [1, 2, 3]:
-        os.system('cls')
-        print('Please enter correct choice.\n')
-        main_block(clear_previous=False)
-        return
-
-    # Get Puzzle choice
-    print('\n---- Choose Puzzle Type ----')
-    print('1. Default Easy (depth 0-9)')
-    print('2. Default Medium (depth 10-19)')
-    print('3. Default Hard (depth >20)')
-    print('4. Custom Puzzle')
-    puzzle_choice = int(input('Enter choice: '))
-
-    if puzzle_choice not in [1, 2, 3, 4]:
-        os.system('cls')
-        print('Please enter correct choice.\n')
-        main_block(clear_previous=False)
-        return
-
-    # get input puzzle state
-    problem_state = []
-    if puzzle_choice == 1:
-        problem_state = list_of_easy_puzzles[3][0]
-    elif puzzle_choice == 2:
-        problem_state = list_of_medium_puzzles[2][0]
-    elif puzzle_choice == 3:
-        problem_state = list_of_hard_puzzles[4][0]
-    elif puzzle_choice == 4:
-        print('\nEnter the numbers in puzzle as space seperated list.')
-        print('Represent blank with 0')
-        print('For Example: 1 2 3 4 0 5 6 7 8\n')
-        problem_input = input('Numbers: ')
-        problem_state = problem_input.split(' ')
-
-        # convert string to integers
-        problem_state = [int(i) for i in problem_state]
-
-        if not validate_state(problem_state):
-            os.system('cls')
-            print('Pleae enter valid input state.\n')
-            main_block(clear_previous=False)
-            return
-
-    # Get Puzzle choice
-    print('\n---- Enter Goal State ----')
-    print('1. Default State (1 2 3 4 5 6 ... n-1 n 0)')
-    print('2. Custom Goal')
-    puzzle_choice = int(input('Enter choice: '))
-
-    if puzzle_choice not in [1, 2]:
-        os.system('cls')
-        print('Please enter correct choice.\n')
-        main_block(clear_previous=False)
-        return
+# puzzle_book = {}
+# for i in range(30):
     
-    # get goal state
-    goal_state = []
-    if puzzle_choice == 1:
+#     random_state = generate_random_states(9)
+#     if (isSolvable(random_state)):
+        
+#         goal_state = [1,2,3,4,5,6,7,8,0]
+#         final_node, _,_ = general_search(random_state, goal_state, queueing_function, MANHATTAN, verbose=False)
+        
+#         if final_node.depth not in puzzle_book:
+#             puzzle_book[final_node.depth] = []
 
-        goal_state = list(range(1, len(problem_state)))
-        goal_state.append(0)
-    
-    elif puzzle_choice == 4:
-        print('\nEnter the numbers in puzzle as space seperated list.')
-        print('Represent blank with 0')
-        print('For Example: 1 2 3 4 0 5 6 7 8\n')
-        problem_input = input('Numbers: ')
-        goal_state = problem_input.split(' ')
+#         puzzle_book[final_node.depth].append(random_state)
 
-        # convert string to integers
-        goal_state = [int(i) for i in goal_state]
+# print (puzzle_book)
 
-        if not validate_state(goal_state):
-            os.system('cls')
-            print('Pleae enter valid input state.\n')
-            main_block(clear_previous=False)
-            return
+# #############################################################
+# ########  Pretty Print Puzzles to display in Report  ########
+# #############################################################
 
-    os.system('cls')
-    print('Initial State\n')
-    parent_node = Node(0, [], problem_state, None)
-    parent_node.print_state()
-
-    if algo_choice == 1:
-
-        print('\nSolving for Uniform cost\n')
-        time_before = time.time()
-        general_search(problem_state, goal_state, queueing_function, UNIFORM)
-        time_after = time.time()
-        total_time = time_after - time_before
-        print(f'time taken {total_time:.5f}')
-
-    elif algo_choice == 2:
-
-        print('\nSolving for A* with Misplaced Tile\n')
-        time_before = time.time()
-        general_search(problem_state, goal_state, queueing_function, MISPLACED)
-        time_after = time.time()
-        total_time = time_after - time_before
-        print(f'time taken {total_time:.4f}')
-
-    elif algo_choice == 3:
-
-        print('\nSolving for A* with Manahattan Distance\n')
-        time_before = time.time()
-        general_search(problem_state, goal_state, queueing_function, MANHATTAN)
-        time_after = time.time()
-        total_time = time_after - time_before
-        print(f'time taken {total_time:.3f}')
-
-    return
-
-
-main_block()
+# combined_puzzles = list_of_easy_puzzles + list_of_medium_puzzles + list_of_hard_puzzles
+# combined_puzzles = list_of_hard_puzzles
+# for puzzle, true_depth in combined_puzzles:
+#     print (f'          --- {true_depth} ---')
+#     print ('         ', puzzle[:3])
+#     print ('         ', puzzle[3:6])
+#     print ('         ', puzzle[6:9])
+#     print ()
+#     print ()

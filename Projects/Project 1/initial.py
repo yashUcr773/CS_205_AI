@@ -15,10 +15,10 @@ import math
 import os
 # to make deep copies of nodes' states
 import copy as cpy
-# to track the time used for execution
-import time
 # for creating random states
 import numpy as np
+# to track the time used for execution
+import time
 
 #############################################################
 ########              Utility Functions              ########
@@ -58,8 +58,8 @@ def validate_state(problem_state: list) -> bool:
     # put the problem state in a set to remove duplicates.
     problem_state_set = set(problem_state)
 
-    for value in problem_state_set:
-        if value not in valid_inputs:
+    for i in problem_state_set:
+        if i not in valid_inputs:
             return False
 
     return True
@@ -112,7 +112,7 @@ class Node():
     # to store the states that have already been generated.
     # prevents exploring repeating states.
     # If a state is present here, then it has already been generated at higher depth
-    global_states_manager = []
+    global_states_manager = {}
 
     # initialize the node
     # depth of node.
@@ -134,9 +134,9 @@ class Node():
 
         # in case the current node is parent node, empty the globally stored states.
         if self.parent is None:
-            Node.global_states_manager = []
-            Node.global_states_manager.append(
-                self._get_state_string(self.state))
+            Node.global_states_manager = {}
+            Node.global_states_manager[self._get_state_string(
+                self.state)] = self.depth
 
     def spawn_children(self):
         '''
@@ -156,27 +156,29 @@ class Node():
             if move == 'U':
                 path.append('U')
                 state_copy[blank_idx], state_copy[blank_idx -
-                                                  self.row_length] = state_copy[blank_idx - self.row_length], state_copy[blank_idx]
+                                                  self.row_length] = state_copy[blank_idx-self.row_length], state_copy[blank_idx]
 
             elif move == 'L':
                 path.append('L')
                 state_copy[blank_idx], state_copy[blank_idx -
-                                                  1] = state_copy[blank_idx - 1], state_copy[blank_idx]
+                                                  1] = state_copy[blank_idx-1], state_copy[blank_idx]
 
             elif move == 'R':
                 path.append('R')
                 state_copy[blank_idx], state_copy[blank_idx +
-                                                  1] = state_copy[blank_idx + 1], state_copy[blank_idx]
+                                                  1] = state_copy[blank_idx+1], state_copy[blank_idx]
 
             elif move == 'D':
                 path.append('D')
                 state_copy[blank_idx], state_copy[blank_idx +
-                                                  self.row_length] = state_copy[blank_idx + self.row_length], state_copy[blank_idx],
+                                                  self.row_length] = state_copy[blank_idx+self.row_length], state_copy[blank_idx],
 
-            if not self._is_state_already_generated(state_copy):
+            past_depth_if_generated = self._is_state_already_generated(
+                state_copy)
+            if past_depth_if_generated == -1 or past_depth_if_generated > self.depth+1:
                 child_node = Node(self.depth+1, path, state_copy, self)
-                Node.global_states_manager.append(
-                    self._get_state_string(child_node.state))
+                Node.global_states_manager[self._get_state_string(
+                    child_node.state)] = self.depth+1
                 children_list.append(child_node)
 
         return children_list
@@ -222,15 +224,23 @@ class Node():
 
         total_manhattan_distance = 0
 
-        for value in goal_state:
-            # goal_state_row, goal_state_colums=self._get_row_col_position(goal_state,i)
-            # random_state_row, random_state_colums=self._get_row_col_position(self.state,i)
-            # total_manhattan_distance+=abs(goal_state_colums-random_state_colums)+abs(goal_state_row-random_state_row)
+        # for i in goal_state:
+        #     if i == 0:
+        #         continue
 
-            distance = abs(self.state.index(value) - goal_state.index(value))
-            total_manhattan_distance += distance/self.row_length + distance % self.row_length
+        #     distance = abs(self.state.index(i) - goal_state.index(i))
+        #     total_manhattan_distance += distance/self.row_length + distance%self.row_length
 
-        return int(total_manhattan_distance)
+        # return int(total_manhattan_distance)
+
+        for i in range(1, self.row_length*self.row_length):
+            distance = abs(self.state.index(i) - goal_state.index(i))
+
+            #manhattan distance between the current state and goal state
+            total_manhattan_distance = total_manhattan_distance + \
+                distance/self.row_length + distance % self.row_length
+
+        return total_manhattan_distance
 
     def misplaced_tile_heuristic(self, goal_state):
         '''
@@ -240,8 +250,8 @@ class Node():
         '''
 
         misplaced_count = 0
-        for idx, _ in enumerate(goal_state):
-            if self.state[idx] != goal_state[idx]:
+        for i in range(len(goal_state)):
+            if self.state[i] != goal_state[i]:
                 misplaced_count += 1
 
         return misplaced_count
@@ -306,7 +316,7 @@ class Node():
         check if the potential child state is already generated
         '''
         state_string = "".join([str(i) for i in state])
-        return state_string in Node.global_states_manager
+        return Node.global_states_manager[state_string] if state_string in Node.global_states_manager else -1
 
     def _get_state_string(self, state):
         '''
@@ -383,6 +393,7 @@ def remove_front(queue: list):
     take in queue and remove the first node
     return the first removed node
     '''
+
     queue = sorted(queue, key=lambda x: x[0])
     node = queue.pop(0)[1]
     return queue, node
@@ -393,6 +404,7 @@ def expand_nodes(node: Node):
     takes in node and operators and expands the node based on operators.
     returns a list of nodes
     '''
+
     children = node.spawn_children()
     return children
 
@@ -418,7 +430,10 @@ def queueing_function(queue, children, heuristic_measure, goal_state):
         child_queue.append((child.get_heuristic_cost(
             heuristic_measure, goal_state), child))
 
-    return queue + child_queue
+    queue = queue + child_queue
+    queue = sorted(queue, key=lambda x: x[0])
+
+    return queue
 
 
 def general_search(initial_state, goal_state, queueing_function, heuristic_measure):
@@ -460,6 +475,24 @@ trial_puzzles = [
     [0, 7, 2, 4, 6, 1, 3, 5, 8],
 ]
 
+trial_puzzles_2 = [
+    [1, 2, 3, 4, 0, 5, 7, 8, 6],
+    [1, 2, 3, 7, 4, 5, 0, 8, 6],
+    [1, 2, 3, 4, 8, 0, 7, 6, 5],
+    [4, 1, 3, 7, 2, 6, 5, 8, 0],
+    [1, 6, 2, 5, 3, 0, 4, 7, 8],
+    [5, 1, 2, 6, 3, 0, 4, 7, 8],
+    [1, 2, 6, 3, 5, 0, 4, 7, 8],
+    [3, 5, 6, 1, 4, 8, 0, 7, 2],
+    [4, 3, 6, 8, 7, 1, 0, 5, 2],
+    [3, 0, 2, 6, 5, 1, 4, 7, 8],
+    [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    [5, 0, 3, 2, 8, 4, 6, 7, 1],
+    [8, 7, 4, 3, 2, 0, 6, 5, 1],
+    [8, 7, 6, 5, 4, 3, 0, 2, 1],
+    [8, 7, 6, 5, 4, 3, 2, 1, 0],
+]
+
 # #############################################################
 # ########       SEARCH TESTING AND VALIDATION         ########
 # #############################################################
@@ -481,7 +514,6 @@ for i in trial_puzzles:
     t1 = time.time()
 
     print('time', t1 - t0)
-    print('--------------')
 
 
 # #############################################################

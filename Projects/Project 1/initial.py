@@ -81,7 +81,7 @@ list_of_hard_puzzles = [
     ([5, 2, 1, 0, 8, 4, 7, 3, 6], 25),
     ([6, 3, 1, 4, 0, 7, 8, 2, 5], 26),
     ([4, 0, 7, 2, 6, 5, 8, 1, 3], 27),
-    ([6, 4, 7, 3, 2, 8, 0, 5, 1], 28),
+    ([8, 6, 4, 2, 0, 7, 3, 1, 5], 28),
     ([5, 2, 1, 3, 8, 4, 6, 0, 7], 29),
     ([6, 4, 7, 8, 3, 5, 1, 2, 0], 30),
 ]
@@ -133,35 +133,37 @@ def validate_state(problem_state: list) -> bool:
 
 def print_formatted_time(time_input):
     hrs = int(time_input // 3600)
-    mins = int((time_input % 3600) // 60) 
-    secs = int((time_input % 3600) % 60 )
+    mins = int((time_input % 3600) // 60)
+    secs = int((time_input % 3600) % 60)
     if hrs:
-        print (f'time taken is {hrs} hrs, {mins} mins and {secs} secs')
+        print(f'time taken is {hrs} hrs, {mins} mins and {secs} secs')
     elif mins:
-        print (f'time taken is {mins} mins and {secs} secs')
+        print(f'time taken is {mins} mins and {secs} secs')
     else:
-        print (f'time taken is {secs} secs')
+        print(f'time taken is {secs} secs')
+
 
 def print_time(time_input):
     if time_input <= 1e-5:
-        print (f'time taken is {time_input:.6f} secs')
+        print(f'time taken is {time_input:.6f} secs')
     elif time_input <= 1e-4:
-        print (f'time taken is {time_input:.5f} secs')
+        print(f'time taken is {time_input:.5f} secs')
     elif time_input <= 1e-3:
-        print (f'time taken is {time_input:.4f} secs')
+        print(f'time taken is {time_input:.4f} secs')
     elif time_input <= 1e-2:
-        print (f'time taken is {time_input:.3f} secs')
+        print(f'time taken is {time_input:.3f} secs')
     elif time_input <= 1e-1:
-        print (f'time taken is {time_input:.2f} secs')
+        print(f'time taken is {time_input:.2f} secs')
     elif time_input >= 0 and time_input <= 1:
-        print (f'time taken is {time_input} secs')
+        print(f'time taken is {time_input} secs')
     else:
         print_formatted_time(time_input)
+
 
 def print_trace(node, goal_state):
     if node == None:
         return
-    
+
     print_trace(node.parent, goal_state)
     node.print_trace_info(goal_state)
 
@@ -297,9 +299,12 @@ class Node():
             if i == 0:
                 continue
 
-            goal_state_row, goal_state_colums=self._get_row_col_position(goal_state,i)
-            random_state_row, random_state_colums=self._get_row_col_position(self.state,i)
-            total_manhattan_distance+=abs(goal_state_colums-random_state_colums)+abs(goal_state_row-random_state_row)
+            goal_state_row, goal_state_colums = self._get_row_col_position(
+                goal_state, i)
+            random_state_row, random_state_colums = self._get_row_col_position(
+                self.state, i)
+            total_manhattan_distance += abs(goal_state_colums-random_state_colums)+abs(
+                goal_state_row-random_state_row)
 
         return int(total_manhattan_distance)
 
@@ -314,7 +319,7 @@ class Node():
         for i in range(len(goal_state)):
             if i == 0:
                 continue
-            
+
             if self.state[i] != goal_state[i]:
                 misplaced_count += 1
 
@@ -354,16 +359,17 @@ class Node():
             if (i+1) % self.row_length == 0:
                 self._print_horizontal_divider(self.state_length)
         print()
-    
+
     def print_trace_info(self, goal_state):
 
         if len(self.path):
-            print (f'The best state to expand with g(n): {self.depth} and h(n): {self.manhattan_distance_heuristic(goal_state)}')
-            print ('Move blank to: ', direction_map[self.path[-1]])
-            print ('Updated State', end = '')
+            print(
+                f'The best state to expand with g(n): {self.depth} and h(n): {self.manhattan_distance_heuristic(goal_state)}')
+            print('Move blank to: ', direction_map[self.path[-1]])
+            print('Updated State', end='')
         else:
-            print ('\nProblem State', end = '')
-        
+            print('\nProblem State', end='')
+
         self._print_horizontal_divider(self.state_length)
         for i in range(self.state_length):
             print(f'| {self.state[i]:2} |', end="")
@@ -487,7 +493,7 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 
     nodes = make_queue(make_node_from_state(initial_state),
                        goal_state, heuristic_measure)
-    
+
     total_nodes_expanded = 0
     max_queue_size = 0
 
@@ -496,17 +502,17 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
         max_queue_size = max(max_queue_size, len(nodes))
 
         if is_queue_empty(nodes):
-            print ("FAILURE")
+            print("FAILURE")
             return -1, total_nodes_expanded, max_queue_size
         else:
             nodes, node = remove_front(nodes)
 
             if goal_state == node.state:
-                if verbose :
-                    print ("SUCCESS")
+                if verbose:
+                    print("SUCCESS")
                     node.print_state(True)
-                    print ('Total nodes Expanded : ',total_nodes_expanded)
-                    print ('Max Queue Size : ',max_queue_size)
+                    print('Total nodes Expanded : ', total_nodes_expanded)
+                    print('Max Queue Size : ', max_queue_size)
                 return node, max_queue_size, total_nodes_expanded
             else:
                 total_nodes_expanded += 1
@@ -695,7 +701,7 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 #         print('Please enter correct choice.\n')
 #         main_block(clear_previous=False)
 #         return
-    
+
 #     if traceback_choice == 1:
 #         print_trace(final_node, goal_state)
 
@@ -730,7 +736,7 @@ def general_search(initial_state, goal_state, queueing_function, heuristic_measu
 #         time_after = time.time()
 #         total_time = time_after - time_before
 #         print (final_node.depth)
-        
+
 #         time_collection[heuristic].append((true_depth, total_time))
 #         queue_collection[heuristic].append((true_depth, max_queue))
 #         nodes_collection[heuristic].append((true_depth, total_nodes))
@@ -786,32 +792,35 @@ def getInvCount(arr):
             if arr[j] != empty_value and arr[i] != empty_value and arr[i] > arr[j]:
                 inv_count += 1
     return inv_count
- 
-def isSolvable(puzzle) :
- 
+
+
+def isSolvable(puzzle):
+
     # Count inversions in given 8 puzzle
     inv_count = getInvCount(puzzle)
- 
+
     # return true if inversion count is even.
     return (inv_count % 2 == 0)
 
+
 puzzle_book = {}
 for i in range(30000):
-    
+
     random_state = generate_random_states(9)
     if (isSolvable(random_state)):
-        
-        goal_state = [1,2,3,4,5,6,7,8,0]
-        final_node, _,_ = general_search(random_state, goal_state, queueing_function, MANHATTAN, verbose=False)
-        
+
+        goal_state = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+        final_node, _, _ = general_search(
+            random_state, goal_state, queueing_function, MANHATTAN, verbose=False)
+
         # if final_node.depth not in puzzle_book:
         #     puzzle_book[final_node.depth] = []
 
         # puzzle_book[final_node.depth].append(random_state)
         if final_node.depth == 28:
-            print (random_state)
+            print(random_state)
 
-print (puzzle_book)
+print(puzzle_book)
 
 # #############################################################
 # ########  Pretty Print Puzzles to display in Report  ########

@@ -874,4 +874,3 @@ def pretty_print_puzzles(combined_puzzles):
         print ()
 
 # pretty_print_puzzles(list_of_easy_puzzles + list_of_medium_puzzles + list_of_hard_puzzles)
-# pretty_print_puzzles(list_of_easy_puzzles)

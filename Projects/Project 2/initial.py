@@ -8,6 +8,8 @@ from urllib import request
 import zipfile
 import time
 import os
+import matplotlib.pyplot as plt
+import threading
 
 #####################################################################
 ################             GET DATASETS             ###############
@@ -15,6 +17,13 @@ import os
 
 path_to_get_dataset_zip = 'https://d1u36hdvoy9y69.cloudfront.net/cs-205-ai/Project_2_synthetic_dataset/data_sets.zip'
 
+# Hack to make it run in colab with minimal changes
+try:
+    print (__file__)
+except:
+    __file__ = './content'
+
+print (__file__)
 base_path = os.path.dirname(os.path.abspath(__file__))+'/datasets'
 
 if not os.path.exists(base_path):
@@ -79,6 +88,43 @@ def train_test_partition(X, Y, ratio=0.2):
 def euclidean(x1, x2):
     return np.sqrt(np.sum((x2 - x1)**2))
 
+
+def print_formatted_time(time_input):
+    '''
+    funtion to take in seconds as input and
+    print in Hours, minutes, and seconds
+    '''
+    hrs = int(time_input // 3600)
+    mins = int((time_input % 3600) // 60)
+    secs = int((time_input % 3600) % 60)
+    if hrs:
+        print(f'It took {hrs} hrs, {mins} mins and {secs} secs to run')
+    elif mins:
+        print(f'It took {mins} mins and {secs} secs to run')
+    else:
+        print(f'It took {secs} secs to run')
+
+
+def print_time(time_input):
+    '''
+    function to print the time with appropritate precision if between 0 and 1
+    else print in HH, MM, SS format
+    '''
+    if time_input <= 1e-5:
+        print(f'It took {time_input:.6f} secs to run')
+    elif time_input <= 1e-4:
+        print(f'It took {time_input:.5f} secs to run')
+    elif time_input <= 1e-3:
+        print(f'It took {time_input:.4f} secs to run')
+    elif time_input <= 1e-2:
+        print(f'It took {time_input:.3f} secs to run')
+    elif time_input <= 1e-1:
+        print(f'It took {time_input:.2f} secs to run')
+    elif time_input >= 0 and time_input <= 1:
+        print(f'It took {time_input} secs to run')
+    else:
+        print_formatted_time(time_input)
+
 #####################################################################
 ################      NEAREST NEIGHBOR FUNCTION       ###############
 #####################################################################
@@ -107,10 +153,19 @@ def knn(x_train, y_train, x_test, y_test):
 ################           Cross Validation           ###############
 #####################################################################
 
-def k_fold_cross_validation(X, Y, k):
+def k_fold_cross_validation(X, Y, k, verbose = False):
 
-    fold_size = int(len(X) / k)
     accuracy_scores = []
+    fold_size = len(X) // k
+
+    # shuffle the dataset
+    indices = np.random.permutation(len(X))
+    X = X[indices]
+    Y = Y[indices]
+
+    if verbose:
+        print (f'Total Instances: {X.shape[0]}, Total Features: {X.shape[1]}')
+        print (f'K: {k}, Fold Size: {fold_size}')
 
     for i in range(k):
         fold_start = i * fold_size
@@ -148,7 +203,7 @@ test_datasets = ['CS170_small_Data__32.txt',
 test_selected_features = [[3, 1, 5], [8, 7, 3], [3, 7, 6], [4, 5, 10]]
 selection_index = 0
 
-k = 2
+k_fold_k_value = 2
 
 while selection_index < len(test_datasets):
     df = pd.read_csv(f'{base_path}/{test_datasets[selection_index]}', sep='  ',
@@ -161,11 +216,11 @@ while selection_index < len(test_datasets):
     X = np.array(df[test_selected_features[selection_index]])
 
     t0 = time.time()
-    k_fold_acc = k_fold_cross_validation(X, Y, k)
+    k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value)
     t1 = time.time()
 
     print(
-        f'k fold cross validation accuracy on {test_datasets[selection_index]} for k = {k} is {k_fold_acc:.3f}')
+        f'k fold cross validation accuracy on {test_datasets[selection_index]} for k = {k_fold_k_value} is {k_fold_acc:.3f}')
     print(f'It took {(t1 - t0):.3f} secs to run.\n')
 
     selection_index += 1
@@ -175,61 +230,109 @@ while selection_index < len(test_datasets):
 ################        TEST ON SELECTED DATA         ###############
 #####################################################################
 
-################                SMALL                 ###############
+for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_path]:
 
-df = pd.read_csv(f'{base_path}/{small_dataset_path}', sep='  ',
-                     header=None, engine='python')
-print(
-    f'The dataset {small_dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
+    df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ',
+                        header=None, engine='python')
+    print(
+        f'The dataset {dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
 
-k = df.shape[0]
-X = np.array(df[list(range(1, df.shape[1]))])
-Y = np.array(df[0])
+    k = df.shape[0]
+    X = np.array(df[list(range(1, df.shape[1]))])
+    Y = np.array(df[0])
 
-t0 = time.time()
-k_fold_acc = k_fold_cross_validation(X, Y, k)
-t1 = time.time()
+    t0 = time.time()
+    k_fold_acc = k_fold_cross_validation(X, Y, k)
+    t1 = time.time()
 
-print(
-    f'k fold cross validation accuracy on {small_dataset_path} for k = {k} is {k_fold_acc:.3f}')
-print(f'It took {(t1 - t0):.3f} secs to run.\n')
+    print(
+        f'k fold cross validation accuracy on {dataset_path} for k = {k} is {k_fold_acc:.3f}')
+    print_time(t1 - t0)
+
+#####################################################################
+################           FEATURE SELECTION          ###############
+#####################################################################
+for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_path]:
+
+    df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ',
+                        header=None, engine='python')
+    print(
+        f'The dataset {dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
+
+    X = np.array(df[list(range(1, df.shape[1]))])
+    Y = np.array(df[0])
+    k_fold_k_value = df.shape[0]
+
+    values, counts = np.unique(Y, return_counts=True)
+    default_rate = max(counts)/sum(counts)
+    print (f'Default Rate is: {default_rate*100:.2f}%')
+
+    selected_features = []
+    accuracy_map = []
+    accuracy_map.append((0, default_rate, []))
+    best_so_far = default_rate
+    best_features = []
+
+    # run a loop from 0 to all features
+    t00 = time.time()
+    while len(selected_features) < df.shape[1] - 1:
+
+        temp_acc_list = []
+        time_per_feature = []
+        verbose = True
+        for i in range(1, df.shape[1]):
+            if i in selected_features:
+                continue
+
+            new_features = list(selected_features)
+            new_features.append(i)
+
+            X = np.array(df[list(new_features)])
+            Y = np.array(df[0])
+
+            t0 = time.time()
+            k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, verbose = verbose)
 
 
-################                LARGE                 ###############
+            t1 = time.time()
+            if verbose == True:
+                print (f'Time for 1 feature {t1 - t0}')
 
-df = pd.read_csv(f'{base_path}/{large_dataset_path}', sep='  ',
-                     header=None, engine='python')
-print(
-    f'The dataset {large_dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
+            verbose = False
 
-k = df.shape[0]
-X = np.array(df[list(range(1, df.shape[1]))])
-Y = np.array(df[0])
-
-t0 = time.time()
-k_fold_acc = k_fold_cross_validation(X, Y, k)
-t1 = time.time()
-
-print(
-    f'k fold cross validation accuracy on {large_dataset_path} for k = {k} is {k_fold_acc:.3f}')
-print(f'It took {(t1 - t0):.3f} secs to run.\n')
+            temp_acc_list.append((i, k_fold_acc))
+            time_per_feature.append(t1-t0)
 
 
-################                XXXLARGE                 ###############
 
-df = pd.read_csv(f'{base_path}/{xxx_large_dataset_path}', sep='  ',
-                     header=None, engine='python')
-print(
-    f'The dataset {xxx_large_dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
+        temp_acc_list = sorted(temp_acc_list, reverse=True, key=lambda x:x[1])
 
-k = df.shape[0]
-X = np.array(df[list(range(1, df.shape[1]))])
-Y = np.array(df[0])
+        selected_features.append(temp_acc_list[0][0])
+        accuracy_map.append((len(selected_features), temp_acc_list[0][1], list(selected_features)))
+        print (f'Max accuracy of {temp_acc_list[0][1]*100:.2f}% for feature {temp_acc_list[0][0]} and the feature list is {selected_features}')
+        print (f'Average time for each feature: {(sum(time_per_feature)/len(time_per_feature)):.2f}s')
+        print (f'Total time for each feature: {(sum(time_per_feature)):.2f}s')
 
-t0 = time.time()
-k_fold_acc = k_fold_cross_validation(X, Y, k)
-t1 = time.time()
+        if(temp_acc_list[0][1] > best_so_far):
+            best_so_far = temp_acc_list[0][1]
+            best_features = list(selected_features)
 
-print(
-    f'k fold cross validation accuracy on {xxx_large_dataset_path} for k = {k} is {k_fold_acc:.3f}')
-print(f'It took {(t1 - t0):.3f} secs to run.\n')
+        print ()
+
+    t11 = time.time()
+    print_time(t11-t00)
+    print ('----------------------------------------')
+
+    print (f'Best Accuracy is {best_so_far} with features {best_features}')
+
+    accuracy_map = np.array(accuracy_map,  dtype=object)
+    plt.figure(1,figsize=(25,5))
+    plt.plot(accuracy_map[:,0], accuracy_map[:,1])
+    plt.title('accuracy vs number of features')
+    plt.xlabel('selected features')
+    plt.ylabel('accuracy')
+    plt.xticks(list(accuracy_map[:,0]), list([','.join([str(j) for j in i]) for i in accuracy_map[:,2]]))
+    plt.grid()
+    plt.plot()
+    plt.show()
+

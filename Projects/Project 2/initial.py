@@ -17,7 +17,6 @@ import threading
 
 path_to_get_dataset_zip = 'https://d1u36hdvoy9y69.cloudfront.net/cs-205-ai/Project_2_synthetic_dataset/data_sets.zip'
 
-# Hack to make it run in colab with minimal changes
 try:
     print (__file__)
 except:
@@ -153,7 +152,7 @@ def knn(x_train, y_train, x_test, y_test):
 ################           Cross Validation           ###############
 #####################################################################
 
-def k_fold_cross_validation(X, Y, k, verbose = False):
+def k_fold_cross_validation(X, Y, k, best_so_far, tolerence=5, verbose = False):
 
     accuracy_scores = []
     fold_size = len(X) // k
@@ -166,6 +165,9 @@ def k_fold_cross_validation(X, Y, k, verbose = False):
     if verbose:
         print (f'Total Instances: {X.shape[0]}, Total Features: {X.shape[1]}')
         print (f'K: {k}, Fold Size: {fold_size}')
+
+    running_average = 0
+    counter = 0
 
     for i in range(k):
         fold_start = i * fold_size
@@ -184,6 +186,12 @@ def k_fold_cross_validation(X, Y, k, verbose = False):
 
         # Append to list
         accuracy_scores.append(accuracy)
+        running_average = np.mean(accuracy_scores)
+
+        if len(accuracy_scores) > 5 and best_so_far != -1 and running_average < best_so_far:
+            counter += 1
+            if counter >= tolerence:
+                return running_average
 
     # return average accuracy
     return np.mean(accuracy_scores)
@@ -216,7 +224,7 @@ while selection_index < len(test_datasets):
     X = np.array(df[test_selected_features[selection_index]])
 
     t0 = time.time()
-    k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value)
+    k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_so_far=-1, tolerence=0, verbose = False)
     t1 = time.time()
 
     print(
@@ -241,18 +249,32 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
     X = np.array(df[list(range(1, df.shape[1]))])
     Y = np.array(df[0])
 
+    # # Sampling if required
+    # indices = np.random.permutation(len(X))
+    # X = X[indices]
+    # Y = Y[indices]
+    # X = X[:1000]
+    # Y = Y[:1000]
+    # k = 2
+
     t0 = time.time()
-    k_fold_acc = k_fold_cross_validation(X, Y, k)
+    k_fold_acc = k_fold_cross_validation(X, Y, k, best_so_far=-1, tolerence=0, verbose = False)
     t1 = time.time()
 
     print(
         f'k fold cross validation accuracy on {dataset_path} for k = {k} is {k_fold_acc:.3f}')
     print_time(t1 - t0)
+    print (f'The model will run for {(df.shape[1]*(df.shape[1]+1))/2} times and will take a total time of {((df.shape[1]*(df.shape[1]+1))/2)*(t1-t0)}')
+    print_time(((df.shape[1]*(df.shape[1]+1))/2)*(t1-t0))
 
 #####################################################################
 ################           FEATURE SELECTION          ###############
 #####################################################################
 for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_path]:
+# for dataset_path in ['CS170_small_Data__32.txt',
+#                  'CS170_small_Data__33.txt',
+#                  'CS170_large_Data__32.txt',
+#                  'CS170_large_Data__33.txt']:
 
     df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ',
                         header=None, engine='python')
@@ -261,6 +283,7 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
 
     X = np.array(df[list(range(1, df.shape[1]))])
     Y = np.array(df[0])
+    # k_fold_k_value = 2
     k_fold_k_value = df.shape[0]
 
     values, counts = np.unique(Y, return_counts=True)
@@ -280,6 +303,9 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
         temp_acc_list = []
         time_per_feature = []
         verbose = True
+
+        best_feature_accuracy = 0
+
         for i in range(1, df.shape[1]):
             if i in selected_features:
                 continue
@@ -291,7 +317,7 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
             Y = np.array(df[0])
 
             t0 = time.time()
-            k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, verbose = verbose)
+            k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_so_far=-1, tolerence=0, verbose = verbose)
 
 
             t1 = time.time()
@@ -299,6 +325,9 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
                 print (f'Time for 1 feature {t1 - t0}')
 
             verbose = False
+
+            if k_fold_acc > best_feature_accuracy:
+                best_feature_accuracy = k_fold_acc
 
             temp_acc_list.append((i, k_fold_acc))
             time_per_feature.append(t1-t0)
@@ -323,7 +352,7 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
     print_time(t11-t00)
     print ('----------------------------------------')
 
-    print (f'Best Accuracy is {best_so_far} with features {best_features}')
+    print (f'Best Accuracy is {best_so_far:.2f}% with features {best_features}')
 
     accuracy_map = np.array(accuracy_map,  dtype=object)
     plt.figure(1,figsize=(25,5))

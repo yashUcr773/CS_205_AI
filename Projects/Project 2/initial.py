@@ -365,3 +365,90 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
     plt.plot()
     plt.show()
 
+#####################################################################
+################          BACKWARD ELIMINATION        ###############
+#####################################################################
+for dataset_path in ['CS170_small_Data__32.txt',
+                 'CS170_small_Data__33.txt',
+                 'CS170_large_Data__32.txt',
+                 'CS170_large_Data__33.txt']:
+
+    df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ', header=None, engine='python')
+    print(
+        f'The dataset {dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
+
+    X = np.array(df[list(range(1, df.shape[1]))])
+    Y = np.array(df[0])
+    k_fold_k_value = df.shape[0]
+
+    values, counts = np.unique(Y, return_counts=True)
+    default_rate = max(counts)/sum(counts)
+    print (f'Default Rate is: {default_rate*100:.2f}%\n')
+
+    selected_features = list(range(1, df.shape[1]))  # Start with all features
+    accuracy_map = []
+    best_so_far = default_rate
+    best_features = selected_features.copy()
+
+    # get accuracy when all features are selected
+    k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, -1, tolerence=0, verbose=False)
+    accuracy_map.append((len(selected_features), k_fold_acc, list(selected_features)))
+
+    t00 = time.time()
+    while len(selected_features) > 1:
+        temp_acc_list = []
+        time_per_feature = []
+        verbose = True
+
+        for i in selected_features:
+            new_features = selected_features.copy()
+            new_features.remove(i)
+
+            X = np.array(df[list(new_features)])
+            Y = np.array(df[0])
+
+            t0 = time.time()
+            k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_so_far, tolerence=10, verbose=verbose)
+            t1 = time.time()
+
+            if verbose:
+                print(f'Time for 1 feature: {t1 - t0:.2f}s')
+
+            verbose = False
+
+            temp_acc_list.append((i, k_fold_acc))
+            time_per_feature.append(t1 - t0)
+
+        temp_acc_list = sorted(temp_acc_list, reverse=True, key=lambda x: x[1])
+
+        selected_features.remove(temp_acc_list[0][0])
+        accuracy_map.append((len(selected_features), temp_acc_list[0][1], list(selected_features)))
+        print(f'Max accuracy of {temp_acc_list[0][1] * 100:.2f}% without feature {temp_acc_list[0][0]} and selected_features as {selected_features}')
+        print(f'Average time for each feature: {sum(time_per_feature) / len(time_per_feature):.2f}s')
+        print(f'Total time for each feature: {sum(time_per_feature):.2f}s')
+        print()
+
+        if(temp_acc_list[0][1] > best_so_far):
+            best_so_far = temp_acc_list[0][1]
+            best_features = list(selected_features)
+
+    t11 = time.time()
+    print_time(t11 - t00)
+    print('----------------------------------------')
+
+    print(f'Best Accuracy is {best_so_far:.2f}% with features {best_features}')
+
+    accuracy_map = np.array(accuracy_map, dtype=object)
+    accuracy_map_updated = np.array(accuracy_map, dtype=object)
+    accuracy_map_updated[:, 0] = len(accuracy_map_updated) - accuracy_map_updated[: ,0]
+    accuracy_map_updated
+
+    plt.figure(1, figsize=(25, 5))
+    plt.plot(accuracy_map_updated[:, 0], accuracy_map_updated[:, 1])
+    plt.title('Accuracy vs Number of Features')
+    plt.xlabel('Number of Features')
+    plt.ylabel('Accuracy')
+    plt.xticks(list(accuracy_map_updated[:, 0]), [','.join([str(j) for j in i]) for i in accuracy_map_updated[:, 2]])
+    plt.grid()
+    plt.plot()
+    plt.show()

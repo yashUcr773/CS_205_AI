@@ -2,21 +2,38 @@
 ###################            IMPORTS            ###################
 #####################################################################
 
-import numpy as np
+# To import and use dataset
 import pandas as pd
+
+# To work with pandas dataframe and plot graphs easily
+import numpy as np
+
+# To download the Dataset from cloud
 from urllib import request
+
+# To extract the dataset
 import zipfile
+
+# To time how long the execution takes place
 import time
+
+# To work with filesystem for extracting and locating the dataset
 import os
+
+# To plot the graphs
 import matplotlib.pyplot as plt
-import threading
 
 #####################################################################
 ################             GET DATASETS             ###############
 #####################################################################
+'''
+Code the download the dataset.
+The dataset is hosted on CDN so that it is available for everyone to download
+'''
 
 path_to_get_dataset_zip = 'https://d1u36hdvoy9y69.cloudfront.net/cs-205-ai/Project_2_synthetic_dataset/data_sets.zip'
 
+# Hack to make it runnable in google colab as it does not support __file__
 try:
     print (__file__)
 except:
@@ -25,9 +42,11 @@ except:
 print (__file__)
 base_path = os.path.dirname(os.path.abspath(__file__))+'/datasets'
 
+# create the dataset directory if it does not exist
 if not os.path.exists(base_path):
     os.makedirs(base_path)
 
+# download the dataset and store it.
 path_to_store_dataset_zip = f'{base_path}/data_set.zip'
 request.urlretrieve(path_to_get_dataset_zip, path_to_store_dataset_zip)
 
@@ -37,18 +56,23 @@ request.urlretrieve(path_to_get_dataset_zip, path_to_store_dataset_zip)
 
 # https://docs.python.org/3/library/zipfile.html
 
-
+'''
+Unzip the dataset into corresponding csv files
+'''
 def unzip_file(zip_path, extract_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_path)
 
-
 unzip_file(path_to_store_dataset_zip, base_path)
-
 
 #####################################################################
 ################         PATH TO TEST DATASETS        ###############
 #####################################################################
+
+'''
+As I am solo and my DOB is 07/17/XXXX,
+Select the datasets accordingly
+'''
 
 # day of month of smallest {07/17/XXXX} = 17
 small_dataset_path = 'CS170_small_Data__17.txt'
@@ -59,32 +83,15 @@ large_dataset_path = 'CS170_large_Data__17.txt'
 # sum of months of both {07/17/XXXX} = 14
 xxx_large_dataset_path = 'CS170_XXXlarge_Data__14.txt'
 
-
 #####################################################################
 ################           HELPER FUNCTIONS           ###############
 #####################################################################
 
-def train_test_partition(X, Y, ratio=0.2):
-
-    # Combine X and Y into a single array for shuffling and splitting
-    data = np.column_stack((X, Y))
-
-    # Calculate the number of samples for testing
-    num_test_samples = int(len(data) * ratio)
-
-    # Randomly shuffle the data
-    np.random.shuffle(data)
-
-    # Split the data into training and testing sets
-    x_train_set, y_train_set = data[:-num_test_samples,
-                                    :-1], data[:-num_test_samples, -1]
-    x_test_set, y_test_set = data[-num_test_samples:,
-                                  :-1], data[-num_test_samples:, -1]
-
-    return x_train_set, y_train_set, x_test_set, y_test_set
-
 
 def euclidean(x1, x2):
+    '''
+    Function to calculate euclidean distance between two points
+    '''
     return np.sqrt(np.sum((x2 - x1)**2))
 
 
@@ -97,11 +104,11 @@ def print_formatted_time(time_input):
     mins = int((time_input % 3600) // 60)
     secs = int((time_input % 3600) % 60)
     if hrs:
-        print(f'It took {hrs} hrs, {mins} mins and {secs} secs to run')
+        print(f'It took {hrs} hrs, {mins} mins and {secs} secs to run.')
     elif mins:
-        print(f'It took {mins} mins and {secs} secs to run')
+        print(f'It took {mins} mins and {secs} secs to run.')
     else:
-        print(f'It took {secs} secs to run')
+        print(f'It took {secs} secs to run.')
 
 
 def print_time(time_input):
@@ -110,19 +117,82 @@ def print_time(time_input):
     else print in HH, MM, SS format
     '''
     if time_input <= 1e-5:
-        print(f'It took {time_input:.6f} secs to run')
+        print(f'It took {time_input:.6f} secs to run.')
     elif time_input <= 1e-4:
-        print(f'It took {time_input:.5f} secs to run')
+        print(f'It took {time_input:.5f} secs to run.')
     elif time_input <= 1e-3:
-        print(f'It took {time_input:.4f} secs to run')
+        print(f'It took {time_input:.4f} secs to run.')
     elif time_input <= 1e-2:
-        print(f'It took {time_input:.3f} secs to run')
+        print(f'It took {time_input:.3f} secs to run.')
     elif time_input <= 1e-1:
-        print(f'It took {time_input:.2f} secs to run')
+        print(f'It took {time_input:.2f} secs to run.')
     elif time_input >= 0 and time_input <= 1:
-        print(f'It took {time_input} secs to run')
+        print(f'It took {time_input} secs to run.')
     else:
         print_formatted_time(time_input)
+
+def plot_graphs(accuracy_map):
+    '''
+    Function to plot the feature graphs.
+    Takes in accuracy_map array that is generated by the functions.
+    '''
+    plt.figure(1,figsize=(25,5))
+    plt.plot(accuracy_map[:,0], accuracy_map[:,1])
+    plt.title('accuracy vs number of features')
+    plt.xlabel('selected features')
+    plt.ylabel('accuracy')
+    plt.xticks(list(accuracy_map[:,0]), list([','.join([str(j) for j in i]) for i in accuracy_map[:,2]]))
+    plt.grid()
+    plt.plot()
+    plt.show()
+
+
+def estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1):
+    '''
+    Function to check how many combinations of the Features the model needs to test and
+    and how long will it take for the model to completely execute all the combinations
+    '''
+
+    df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ',
+                        header=None, engine='python')
+    print(
+        f'The dataset {dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
+
+    X = np.array(df[list(range(1, df.shape[1]))])
+    Y = np.array(df[0])
+
+    if validation_type not in ['LEAVE_ONE_OUT', 'K_FOLD_VALIDATION']:
+        raise Exception('Not a valid validation')
+
+    k_fold_k_value = k_val
+    if validation_type == 'LEAVE_ONE_OUT':
+        k_fold_k_value = df.shape[0]
+
+    if sampling_factor <0 or sampling_factor >1:
+        raise Exception('Not a valid sampling factor')
+
+    if sampling == True:
+        # shuffle the dataset
+        indices = np.random.permutation(len(X))
+        X = X[indices]
+        Y = Y[indices]
+        selected_len = len(indices) // sampling_factor
+        X = X[:selected_len]
+        Y = Y[:selected_len]
+
+    t0 = time.time()
+    k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_so_far=-1, tolerence=0, verbose = False)
+    t1 = time.time()
+
+    time_taken = t1 - t0
+    total_combinations = (X.shape[1]*(X.shape[1]+1)) // 2
+
+    print(
+        f'K-fold cross validation accuracy on {dataset_path} for k = {k_fold_k_value} is with all features selected is {k_fold_acc*100:.3f}%')
+    print_time(time_taken)
+    print ()
+    print (f'The model will run for {total_combinations} times and will take a total time of {total_combinations*time_taken:.2f}s')
+    print_time(total_combinations*time_taken)
 
 #####################################################################
 ################      NEAREST NEIGHBOR FUNCTION       ###############
@@ -130,7 +200,9 @@ def print_time(time_input):
 
 
 def knn(x_train, y_train, x_test, y_test):
-
+    '''
+    Function to find the accuracy of given train and test set using nearest neighbour algorithm
+    '''
     correct = 0
     for i in range(0, x_test.shape[0]):
         distances = []
@@ -147,12 +219,17 @@ def knn(x_train, y_train, x_test, y_test):
     accuracy = correct/x_test.shape[0]
     return accuracy
 
-
 #####################################################################
 ################           Cross Validation           ###############
 #####################################################################
 
 def k_fold_cross_validation(X, Y, k, best_so_far, tolerence=5, verbose = False):
+    '''
+    Function to apply k fold cross validation on a given dataset
+    This function can be optimized to terminate runs if the running average is lower than the best_so_far value provided.
+    To terminate runs, pass the least required average, else pass in -1.
+    The algorithm will run for a minimum of 100 iterations and then will tolerate atmost tolerence amount of runs before terminating.
+    '''
 
     accuracy_scores = []
     fold_size = len(X) // k
@@ -188,7 +265,8 @@ def k_fold_cross_validation(X, Y, k, best_so_far, tolerence=5, verbose = False):
         accuracy_scores.append(accuracy)
         running_average = np.mean(accuracy_scores)
 
-        if len(accuracy_scores) > 5 and best_so_far != -1 and running_average < best_so_far:
+        # If the algorithm has run for 20 folds and the running average has not improved, then terminate the run
+        if len(accuracy_scores) > 20 and best_so_far != -1 and running_average < best_so_far:
             counter += 1
             if counter >= tolerence:
                 return running_average
@@ -197,84 +275,9 @@ def k_fold_cross_validation(X, Y, k, best_so_far, tolerence=5, verbose = False):
     return np.mean(accuracy_scores)
 
 #####################################################################
-################          TEST ON TEST DATA           ###############
+################           FORWARD SELECTION          ###############
 #####################################################################
-
-################          DATA PREPROCESSING          ###############
-
-
-test_datasets = ['CS170_small_Data__32.txt',
-                 'CS170_small_Data__33.txt',
-                 'CS170_large_Data__32.txt',
-                 'CS170_large_Data__33.txt']
-
-test_selected_features = [[3, 1, 5], [8, 7, 3], [3, 7, 6], [4, 5, 10]]
-selection_index = 0
-
-k_fold_k_value = 2
-
-while selection_index < len(test_datasets):
-    df = pd.read_csv(f'{base_path}/{test_datasets[selection_index]}', sep='  ',
-                     header=None, engine='python')
-    print(
-        f'The dataset {test_datasets[selection_index]} has {df.shape[0]} instances with {df.shape[1] - 1} features')
-
-    X = np.array(df[list(range(1, df.shape[1]))])
-    Y = np.array(df[0])
-    X = np.array(df[test_selected_features[selection_index]])
-
-    t0 = time.time()
-    k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_so_far=-1, tolerence=0, verbose = False)
-    t1 = time.time()
-
-    print(
-        f'k fold cross validation accuracy on {test_datasets[selection_index]} for k = {k_fold_k_value} is {k_fold_acc:.3f}')
-    print(f'It took {(t1 - t0):.3f} secs to run.\n')
-
-    selection_index += 1
-
-
-#####################################################################
-################        TEST ON SELECTED DATA         ###############
-#####################################################################
-
-for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_path]:
-
-    df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ',
-                        header=None, engine='python')
-    print(
-        f'The dataset {dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
-
-    k = df.shape[0]
-    X = np.array(df[list(range(1, df.shape[1]))])
-    Y = np.array(df[0])
-
-    # # Sampling if required
-    # indices = np.random.permutation(len(X))
-    # X = X[indices]
-    # Y = Y[indices]
-    # X = X[:1000]
-    # Y = Y[:1000]
-    # k = 2
-
-    t0 = time.time()
-    k_fold_acc = k_fold_cross_validation(X, Y, k, best_so_far=-1, tolerence=0, verbose = False)
-    t1 = time.time()
-
-    print(
-        f'k fold cross validation accuracy on {dataset_path} for k = {k} is {k_fold_acc:.3f}')
-    print_time(t1 - t0)
-    print (f'The model will run for {(df.shape[1]*(df.shape[1]+1))/2} times and will take a total time of {((df.shape[1]*(df.shape[1]+1))/2)*(t1-t0)}')
-    print_time(((df.shape[1]*(df.shape[1]+1))/2)*(t1-t0))
-
-#####################################################################
-################           FEATURE SELECTION          ###############
-#####################################################################
-for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_path]:
-# for dataset_path in ['CS170_small_Data__32.txt',
-#                  'CS170_small_Data__33.txt',
-#                  'CS170_large_Data__32.txt',
-#                  'CS170_large_Data__33.txt']:
+def forward_selection(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1):
 
     df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ',
                         header=None, engine='python')
@@ -283,12 +286,29 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
 
     X = np.array(df[list(range(1, df.shape[1]))])
     Y = np.array(df[0])
-    # k_fold_k_value = 2
-    k_fold_k_value = df.shape[0]
+
+    if validation_type not in ['LEAVE_ONE_OUT', 'K_FOLD_VALIDATION']:
+        raise Exception('Not a valid validation')
+
+    k_fold_k_value = k_val
+    if validation_type == 'LEAVE_ONE_OUT':
+        k_fold_k_value = df.shape[0]
+
+    if sampling_factor <0 or sampling_factor >1:
+        raise Exception('Not a valid sampling factor')
+
+    if sampling == True:
+        # shuffle the dataset
+        indices = np.random.permutation(len(X))
+        X = X[indices]
+        Y = Y[indices]
+        selected_len = len(indices) // sampling_factor
+        X = X[:selected_len]
+        Y = Y[:selected_len]
 
     values, counts = np.unique(Y, return_counts=True)
     default_rate = max(counts)/sum(counts)
-    print (f'Default Rate is: {default_rate*100:.2f}%')
+    print (f'Default Rate is: {default_rate*100:.2f}% \n')
 
     selected_features = []
     accuracy_map = []
@@ -299,7 +319,6 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
     # run a loop from 0 to all features
     t00 = time.time()
     while len(selected_features) < df.shape[1] - 1:
-
         temp_acc_list = []
         time_per_feature = []
         verbose = True
@@ -317,14 +336,13 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
             Y = np.array(df[0])
 
             t0 = time.time()
-            k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_so_far=-1, tolerence=0, verbose = verbose)
-
-
+            k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_feature_accuracy, tolerence=10, verbose = verbose)
             t1 = time.time()
             if verbose == True:
-                print (f'Time for 1 feature {t1 - t0}')
-
+                print (f'Time for 1 feature {t1 - t0:.2f}s')
             verbose = False
+
+            print (f'The accuracy for features {new_features} is {k_fold_acc*100:.2f}%')
 
             if k_fold_acc > best_feature_accuracy:
                 best_feature_accuracy = k_fold_acc
@@ -338,6 +356,8 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
 
         selected_features.append(temp_acc_list[0][0])
         accuracy_map.append((len(selected_features), temp_acc_list[0][1], list(selected_features)))
+
+        print ()
         print (f'Max accuracy of {temp_acc_list[0][1]*100:.2f}% for feature {temp_acc_list[0][0]} and the feature list is {selected_features}')
         print (f'Average time for each feature: {(sum(time_per_feature)/len(time_per_feature)):.2f}s')
         print (f'Total time for each feature: {(sum(time_per_feature)):.2f}s')
@@ -352,38 +372,47 @@ for dataset_path in [small_dataset_path, large_dataset_path, xxx_large_dataset_p
     print_time(t11-t00)
     print ('----------------------------------------')
 
-    print (f'Best Accuracy is {best_so_far:.2f}% with features {best_features}')
+    print (f'Best Accuracy is {best_so_far*100:.2f}% with features {best_features}')
 
     accuracy_map = np.array(accuracy_map,  dtype=object)
-    plt.figure(1,figsize=(25,5))
-    plt.plot(accuracy_map[:,0], accuracy_map[:,1])
-    plt.title('accuracy vs number of features')
-    plt.xlabel('selected features')
-    plt.ylabel('accuracy')
-    plt.xticks(list(accuracy_map[:,0]), list([','.join([str(j) for j in i]) for i in accuracy_map[:,2]]))
-    plt.grid()
-    plt.plot()
-    plt.show()
+    return accuracy_map
 
 #####################################################################
-################          BACKWARD ELIMINATION        ###############
+################         BACKWARD ELIMINATION         ###############
 #####################################################################
-for dataset_path in ['CS170_small_Data__32.txt',
-                 'CS170_small_Data__33.txt',
-                 'CS170_large_Data__32.txt',
-                 'CS170_large_Data__33.txt']:
+def backward_elimination(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1):
 
-    df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ', header=None, engine='python')
+    df = pd.read_csv(f'{base_path}/{dataset_path}', sep='  ',
+                        header=None, engine='python')
     print(
         f'The dataset {dataset_path} has {df.shape[0]} instances with {df.shape[1] - 1} features')
 
     X = np.array(df[list(range(1, df.shape[1]))])
     Y = np.array(df[0])
-    k_fold_k_value = df.shape[0]
+
+    if validation_type not in ['LEAVE_ONE_OUT', 'K_FOLD_VALIDATION']:
+        raise Exception('Not a valid validation')
+
+    k_fold_k_value = k_val
+    if validation_type == 'LEAVE_ONE_OUT':
+        k_fold_k_value = df.shape[0]
+
+    if sampling_factor <0 or sampling_factor >1:
+        raise Exception('Not a valid sampling factor')
+
+    if sampling == True:
+        # shuffle the dataset
+        indices = np.random.permutation(len(X))
+        X = X[indices]
+        Y = Y[indices]
+        selected_len = len(indices) // sampling_factor
+        X = X[:selected_len]
+        Y = Y[:selected_len]
 
     values, counts = np.unique(Y, return_counts=True)
     default_rate = max(counts)/sum(counts)
-    print (f'Default Rate is: {default_rate*100:.2f}%\n')
+    print (f'Default Rate is: {default_rate*100:.2f}% \n')
+
 
     selected_features = list(range(1, df.shape[1]))  # Start with all features
     accuracy_map = []
@@ -394,11 +423,15 @@ for dataset_path in ['CS170_small_Data__32.txt',
     k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, -1, tolerence=0, verbose=False)
     accuracy_map.append((len(selected_features), k_fold_acc, list(selected_features)))
 
+    print (f'The accuracy for all features {selected_features} is {k_fold_acc*100:.2f}%')
+
     t00 = time.time()
     while len(selected_features) > 1:
         temp_acc_list = []
         time_per_feature = []
         verbose = True
+
+        best_feature_accuracy = 0
 
         for i in selected_features:
             new_features = selected_features.copy()
@@ -408,13 +441,16 @@ for dataset_path in ['CS170_small_Data__32.txt',
             Y = np.array(df[0])
 
             t0 = time.time()
-            k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_so_far, tolerence=10, verbose=verbose)
+            k_fold_acc = k_fold_cross_validation(X, Y, k_fold_k_value, best_feature_accuracy, tolerence=10, verbose=verbose)
             t1 = time.time()
-
             if verbose:
                 print(f'Time for 1 feature: {t1 - t0:.2f}s')
-
             verbose = False
+
+            print (f'The accuracy after removing feature {i} and for features {new_features} is {k_fold_acc*100:.2f}%')
+
+            if k_fold_acc > best_feature_accuracy:
+                best_feature_accuracy = k_fold_acc
 
             temp_acc_list.append((i, k_fold_acc))
             time_per_feature.append(t1 - t0)
@@ -423,6 +459,8 @@ for dataset_path in ['CS170_small_Data__32.txt',
 
         selected_features.remove(temp_acc_list[0][0])
         accuracy_map.append((len(selected_features), temp_acc_list[0][1], list(selected_features)))
+
+        print ()
         print(f'Max accuracy of {temp_acc_list[0][1] * 100:.2f}% without feature {temp_acc_list[0][0]} and selected_features as {selected_features}')
         print(f'Average time for each feature: {sum(time_per_feature) / len(time_per_feature):.2f}s')
         print(f'Total time for each feature: {sum(time_per_feature):.2f}s')
@@ -436,19 +474,125 @@ for dataset_path in ['CS170_small_Data__32.txt',
     print_time(t11 - t00)
     print('----------------------------------------')
 
-    print(f'Best Accuracy is {best_so_far:.2f}% with features {best_features}')
+    print(f'Best Accuracy is {best_so_far*100:.2f}% with features {best_features}')
+    accuracy_map = np.array(accuracy_map,  dtype=object)
+    return accuracy_map
 
-    accuracy_map = np.array(accuracy_map, dtype=object)
-    accuracy_map_updated = np.array(accuracy_map, dtype=object)
-    accuracy_map_updated[:, 0] = len(accuracy_map_updated) - accuracy_map_updated[: ,0]
-    accuracy_map_updated
+#####################################################################
+################          COMBINE FUNCTION            ###############
+#####################################################################
 
-    plt.figure(1, figsize=(25, 5))
-    plt.plot(accuracy_map_updated[:, 0], accuracy_map_updated[:, 1])
-    plt.title('Accuracy vs Number of Features')
-    plt.xlabel('Number of Features')
-    plt.ylabel('Accuracy')
-    plt.xticks(list(accuracy_map_updated[:, 0]), [','.join([str(j) for j in i]) for i in accuracy_map_updated[:, 2]])
-    plt.grid()
-    plt.plot()
-    plt.show()
+################          TEST DATA 1            ###############
+
+dataset_path = 'CS170_small_Data__32.txt'
+print ('------------------ Time Estimation ----------------------')
+estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+
+print ()
+print ('------------------ Forward Selection ----------------------')
+accuracy_map_forward_1 = forward_selection(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+plot_graphs(accuracy_map_forward_1)
+
+print ()
+print ('------------------ Backward Elimination ----------------------')
+accuracy_map_backward = backward_elimination(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+accuracy_map_updated_1 = np.array(accuracy_map_backward, dtype=object)
+accuracy_map_updated_1[:, 0] = len(accuracy_map_updated_1) - accuracy_map_updated_1[: ,0]
+plot_graphs(accuracy_map_updated_1)
+
+################          TEST DATA 2            ###############
+
+dataset_path = 'CS170_small_Data__33.txt'
+print ('------------------ Time Estimation ----------------------')
+estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+
+print ()
+print ('------------------ Forward Selection ----------------------')
+accuracy_map_forward_2 = forward_selection(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+plot_graphs(accuracy_map_forward_2)
+
+print ()
+print ('------------------ Backward Elimination ----------------------')
+accuracy_map_backward = backward_elimination(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+accuracy_map_updated_2 = np.array(accuracy_map_backward, dtype=object)
+accuracy_map_updated_2[:, 0] = len(accuracy_map_updated_2) - accuracy_map_updated_2[: ,0]
+plot_graphs(accuracy_map_updated_2)
+
+################          TEST DATA 3            ###############
+
+dataset_path = 'CS170_large_Data__33.txt'
+print ('------------------ Time Estimation ----------------------')
+estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+
+print ()
+print ('------------------ Forward Selection ----------------------')
+accuracy_map_forward_3 = forward_selection(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+plot_graphs(accuracy_map_forward_3)
+
+print ()
+print ('------------------ Backward Elimination ----------------------')
+accuracy_map_backward = backward_elimination(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+accuracy_map_updated_3 = np.array(accuracy_map_backward, dtype=object)
+accuracy_map_updated_3[:, 0] = len(accuracy_map_updated_3) - accuracy_map_updated_3[: ,0]
+plot_graphs(accuracy_map_updated_3)
+
+################          TEST DATA 4            ###############
+
+dataset_path = 'CS170_large_Data__33.txt'
+print ('------------------ Time Estimation ----------------------')
+estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+
+print ()
+print ('------------------ Forward Selection ----------------------')
+accuracy_map_forward_4 = forward_selection(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+plot_graphs(accuracy_map_forward_4)
+
+print ()
+print ('------------------ Backward Elimination ----------------------')
+accuracy_map_backward = backward_elimination(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+accuracy_map_updated_4 = np.array(accuracy_map_backward, dtype=object)
+accuracy_map_updated_4[:, 0] = len(accuracy_map_updated_4) - accuracy_map_updated_4[: ,0]
+plot_graphs(accuracy_map_updated_4)
+
+#####################################################################
+################       Working on selected Data       ###############
+#####################################################################
+
+################          SELECTED DATA 1            ###############
+dataset_path = small_dataset_path
+estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+
+accuracy_map_forward_5 = forward_selection(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+plot_graphs(accuracy_map_forward_5)
+
+accuracy_map_backward = backward_elimination(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+accuracy_map_updated_5 = np.array(accuracy_map_backward, dtype=object)
+accuracy_map_updated_5[:, 0] = len(accuracy_map_updated_5) - accuracy_map_updated_5[: ,0]
+plot_graphs(accuracy_map_updated_5)
+
+################          SELECTED DATA 6            ###############
+dataset_path = large_dataset_path
+estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+
+accuracy_map_forward_6 = forward_selection(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+plot_graphs(accuracy_map_forward_6)
+
+accuracy_map_backward = backward_elimination(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+accuracy_map_updated_6 = np.array(accuracy_map_backward, dtype=object)
+accuracy_map_updated_6[:, 0] = len(accuracy_map_updated_6) - accuracy_map_updated_6[: ,0]
+plot_graphs(accuracy_map_updated_6)
+
+################          SELECTED DATA 7            ###############
+dataset_path = xxx_large_dataset_path
+estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+estimate_run_time(dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=False, sampling_factor=1)
+estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=True, sampling_factor=0.5)
+estimate_run_time(dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.5)
+
+accuracy_map_forward_7 = forward_selection(dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.5)
+plot_graphs(accuracy_map_forward_7)
+
+accuracy_map_backward = backward_elimination(dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.5)
+accuracy_map_updated_7 = np.array(accuracy_map_backward, dtype=object)
+accuracy_map_updated_7[:, 0] = len(accuracy_map_updated_7) - accuracy_map_updated_7[: ,0]
+plot_graphs(accuracy_map_updated_7)

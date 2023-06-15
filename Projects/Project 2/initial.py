@@ -257,7 +257,7 @@ def knn(x_train, y_train, x_test, y_test):
 #####################################################################
 
 
-def k_fold_cross_validation(X, Y, k, best_so_far, tolerence=5, verbose=False):
+def k_fold_cross_validation(X, Y, k, best_so_far, tolerence=5, verbose=False, prune_run=False):
     '''
     Function to apply k fold cross validation on a given dataset
     This function can be optimized to terminate runs if the running average is lower than the best_so_far value provided.
@@ -300,7 +300,7 @@ def k_fold_cross_validation(X, Y, k, best_so_far, tolerence=5, verbose=False):
         running_average = np.mean(accuracy_scores)
 
         # If the algorithm has run for 20 folds and the running average has not improved, then terminate the run
-        if len(accuracy_scores) > 20 and best_so_far != -1 and running_average < best_so_far:
+        if prune_run == True and len(accuracy_scores) > 20 and best_so_far != -1 and running_average < best_so_far:
             counter += 1
             if counter >= tolerence:
                 return running_average
@@ -313,7 +313,7 @@ def k_fold_cross_validation(X, Y, k, best_so_far, tolerence=5, verbose=False):
 #####################################################################
 
 
-def forward_selection(dataset_path, sep='   ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1):
+def forward_selection(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1, prune_run=False):
 
     df = pd.read_csv(f'{base_path}/{dataset_path}', sep=sep,
                      header=None, engine='python')
@@ -375,7 +375,7 @@ def forward_selection(dataset_path, sep='   ', validation_type='LEAVE_ONE_OUT', 
 
             t0 = time.time()
             k_fold_acc = k_fold_cross_validation(
-                X, Y, k_fold_k_value, best_feature_accuracy, tolerence=10, verbose=verbose)
+                X, Y, k_fold_k_value, best_feature_accuracy, tolerence=10, verbose=verbose, prune_run=prune_run)
             t1 = time.time()
             if verbose == True:
                 print(f'Time for 1 feature {t1 - t0:.2f}s')
@@ -424,7 +424,7 @@ def forward_selection(dataset_path, sep='   ', validation_type='LEAVE_ONE_OUT', 
 #####################################################################
 
 
-def backward_elimination(dataset_path, sep='   ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1):
+def backward_elimination(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1, prune_run=False):
 
     df = pd.read_csv(f'{base_path}/{dataset_path}', sep=sep,
                      header=None, engine='python')
@@ -490,7 +490,7 @@ def backward_elimination(dataset_path, sep='   ', validation_type='LEAVE_ONE_OUT
 
             t0 = time.time()
             k_fold_acc = k_fold_cross_validation(
-                X, Y, k_fold_k_value, best_feature_accuracy, tolerence=10, verbose=verbose)
+                X, Y, k_fold_k_value, best_feature_accuracy, tolerence=10, verbose=verbose, prune_run=prune_run)
             t1 = time.time()
             if verbose:
                 print(f'Time for 1 feature: {t1 - t0:.2f}s')
@@ -534,7 +534,7 @@ def backward_elimination(dataset_path, sep='   ', validation_type='LEAVE_ONE_OUT
 
 """### Test Data"""
 
-# #####################################################################
+#####################################################################
 # ################          COMBINE FUNCTION            ###############
 # #####################################################################
 
@@ -629,41 +629,41 @@ def backward_elimination(dataset_path, sep='   ', validation_type='LEAVE_ONE_OUT
 
 """### Selected Data"""
 
-#####################################################################
-################       Working on selected Data       ###############
-#####################################################################
+# #####################################################################
+# ################       Working on selected Data       ###############
+# #####################################################################
 
-################          SELECTED DATA 1            ###############
-dataset_path = small_dataset_path
-estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-                  k_val=2, sampling=False, sampling_factor=1)
+# ################          SELECTED DATA 1            ###############
+# dataset_path = small_dataset_path
+# estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
+#                   k_val=2, sampling=False, sampling_factor=1)
 
-accuracy_map_forward_5 = forward_selection(
-    dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-plot_graphs(accuracy_map_forward_5, 'Forward Selection', 'Small')
+# accuracy_map_forward_5 = forward_selection(
+#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+# plot_graphs(accuracy_map_forward_5, 'Forward Selection', 'Small')
 
-accuracy_map_backward = backward_elimination(
-    dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-accuracy_map_updated_5 = np.array(accuracy_map_backward, dtype=object)
-accuracy_map_updated_5[:, 0] = len(
-    accuracy_map_updated_5) - accuracy_map_updated_5[:, 0]
-plot_graphs(accuracy_map_updated_5, 'Backward Elimination', 'Small')
+# accuracy_map_backward = backward_elimination(
+#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+# accuracy_map_updated_5 = np.array(accuracy_map_backward, dtype=object)
+# accuracy_map_updated_5[:, 0] = len(
+#     accuracy_map_updated_5) - accuracy_map_updated_5[:, 0]
+# plot_graphs(accuracy_map_updated_5, 'Backward Elimination', 'Small')
 
-################          SELECTED DATA 6            ###############
-dataset_path = large_dataset_path
-estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-                  k_val=2, sampling=False, sampling_factor=1)
+# ################          SELECTED DATA 6            ###############
+# dataset_path = large_dataset_path
+# estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
+#                   k_val=2, sampling=False, sampling_factor=1)
 
-accuracy_map_forward_6 = forward_selection(
-    dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-plot_graphs(accuracy_map_forward_6, 'Forward Selection', 'Large')
+# accuracy_map_forward_6 = forward_selection(
+#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+# plot_graphs(accuracy_map_forward_6, 'Forward Selection', 'Large')
 
-accuracy_map_backward = backward_elimination(
-    dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-accuracy_map_updated_6 = np.array(accuracy_map_backward, dtype=object)
-accuracy_map_updated_6[:, 0] = len(
-    accuracy_map_updated_6) - accuracy_map_updated_6[:, 0]
-plot_graphs(accuracy_map_updated_6, 'Backward Elimination', 'Large')
+# accuracy_map_backward = backward_elimination(
+#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+# accuracy_map_updated_6 = np.array(accuracy_map_backward, dtype=object)
+# accuracy_map_updated_6[:, 0] = len(
+#     accuracy_map_updated_6) - accuracy_map_updated_6[:, 0]
+# plot_graphs(accuracy_map_updated_6, 'Backward Elimination', 'Large')
 
 ################          SELECTED DATA 7            ###############
 dataset_path = xxx_large_dataset_path
@@ -680,9 +680,9 @@ estimate_run_time(dataset_path, validation_type='K_FOLD_VALIDATION',
                   k_val=2, sampling=True, sampling_factor=0.3)
 print ()
 
-accuracy_map_forward_7 = forward_selection(
-    dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.3)
-plot_graphs(accuracy_map_forward_7, 'Forward Selection', 'XXXLarge')
+# accuracy_map_forward_7 = forward_selection(
+#     dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.3)
+# plot_graphs(accuracy_map_forward_7, 'Forward Selection', 'XXXLarge')
 
 accuracy_map_backward = backward_elimination(
     dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.3)
@@ -696,60 +696,58 @@ plot_graphs(accuracy_map_updated_7, 'Backward Elimination', 'XXXLarge')
 
 """### UI"""
 
-# def main_block():
-#     print ('---- My Awesome Feature Search Algorithm ----\n')
-#     print ('Select the Dataset Size\n1. Small\n2. Large\n3. Extra Large')
-#     dataset_choice = int(input('Enter Choice.'))
-#     if dataset_choice not in [1, 2, 3]:
-#         os.system('cls')
-#         print('Please enter correct choice.\n')
-#         main_block()
-#         return
+def main_block():
+    print ('---- My Awesome Feature Search Algorithm ----\n')
+    print ('Select the Dataset Size\n1. Small\n2. Large\n3. Extra Large')
+    dataset_choice = int(input('Enter Choice.'))
+    if dataset_choice not in [1, 2, 3]:
+        os.system('cls')
+        print('Please enter correct choice.\n')
+        main_block()
+        return
 
-#     print ('\nSelect the Algorithm\n1. Forward Selection\n2. Backward Elimination')
-#     algorithm_choice = int(input('Enter Choice.'))
-#     if algorithm_choice not in [1, 2]:
-#         os.system('cls')
-#         print('Please enter correct choice.\n')
-#         main_block()
-#         return
+    print ('\nSelect the Algorithm\n1. Forward Selection\n2. Backward Elimination')
+    algorithm_choice = int(input('Enter Choice.'))
+    if algorithm_choice not in [1, 2]:
+        os.system('cls')
+        print('Please enter correct choice.\n')
+        main_block()
+        return
 
-#     datasets = [small_dataset_path, large_dataset_path, xxx_large_dataset_path]
-#     selected_dataset = datasets[dataset_choice-1]
+    datasets = [small_dataset_path, large_dataset_path, xxx_large_dataset_path]
+    selected_dataset = datasets[dataset_choice-1]
 
-#     validation_type = 'LEAVE_ONE_OUT'
-#     k_val=2
-#     sampling=False
-#     sampling_factor=1
+    validation_type = 'LEAVE_ONE_OUT'
+    k_val=2
+    sampling=False
+    sampling_factor=1
 
-#     if dataset_choice == 3:
-#         validation_type = 'K_FOLD_VALIDATION'
-#         k_val=2
-#         sampling=True
-#         sampling_factor=0.5
+    if dataset_choice == 3:
+        validation_type = 'K_FOLD_VALIDATION'
+        k_val=2
+        sampling=True
+        sampling_factor=0.5
 
-#     if algorithm_choice == 1:
-#         estimate_run_time(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
-#         accuracy_map_forward_6 = forward_selection(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
-#         plot_graphs(accuracy_map_forward_6)
-#     else:
-#         estimate_run_time(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
-#         accuracy_map_backward = backward_elimination(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
-#         accuracy_map_updated_7 = np.array(accuracy_map_backward, dtype=object)
-#         accuracy_map_updated_7[:, 0] = len(accuracy_map_updated_7) - accuracy_map_updated_7[: ,0]
-#         plot_graphs(accuracy_map_updated_7)
+    if algorithm_choice == 1:
+        estimate_run_time(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
+        accuracy_map_forward_6 = forward_selection(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
+        plot_graphs(accuracy_map_forward_6)
+    else:
+        estimate_run_time(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
+        accuracy_map_backward = backward_elimination(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
+        accuracy_map_updated_7 = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_7[:, 0] = len(accuracy_map_updated_7) - accuracy_map_updated_7[: ,0]
+        plot_graphs(accuracy_map_updated_7)
 
-# main_block()
+main_block()
 
 """### Real World Dataset"""
 
 # https://github.com/allisonhorst/palmerpenguins
 
 real_world_path = 'realworld.csv'
-
 data = sns.load_dataset("penguins") # load penguins dataset from seaborn
 data = data.dropna() # drop samples with missing values (NaN)
-data
 
 columns_to_number_map = {}
 number_to_columns_map = {}
@@ -757,8 +755,6 @@ number_to_columns_map = {}
 for idx, col in enumerate(data.columns):
     columns_to_number_map[col] = idx
     number_to_columns_map[idx] = col
-
-columns_to_number_map, number_to_columns_map
 
 LE = LabelEncoder()
 data['species'] = LE.fit_transform(data['species'])
@@ -771,16 +767,14 @@ estimate_run_time(real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT',
                   k_val=2, sampling=False, sampling_factor=1)
 
 accuracy_map_forward_real = forward_selection(
-    real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-print (columns_to_number_map)
+    real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1, prune_run = False)
 print (number_to_columns_map)
 plot_graphs(accuracy_map_forward_real, 'Forward Selection', 'Real World')
 
 accuracy_map_backward = backward_elimination(
-    real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+    real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1, prune_run = False)
 accuracy_map_updated_real = np.array(accuracy_map_backward, dtype=object)
 accuracy_map_updated_real[:, 0] = len(
     accuracy_map_updated_real) - accuracy_map_updated_real[:, 0]
-print (columns_to_number_map)
 print (number_to_columns_map)
 plot_graphs(accuracy_map_updated_real, 'Backward Elimination', 'Real World')

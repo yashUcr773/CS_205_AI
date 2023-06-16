@@ -211,7 +211,7 @@ def estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k
 
     t0 = time.time()
     k_fold_acc = k_fold_cross_validation(
-        X, Y, k_fold_k_value, best_so_far=-1, tolerence=0, verbose=False)
+        X, Y, k_fold_k_value, best_so_far=-1, tolerence=0, verbose=False, prune_run=False)
     t1 = time.time()
 
     time_taken = t1 - t0
@@ -466,7 +466,7 @@ def backward_elimination(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT'
 
     # get accuracy when all features are selected
     k_fold_acc = k_fold_cross_validation(
-        X, Y, k_fold_k_value, -1, tolerence=0, verbose=False)
+        X, Y, k_fold_k_value, -1, tolerence=0, verbose=False, prune_run=False)
     accuracy_map.append(
         (len(selected_features), k_fold_acc, list(selected_features)))
 
@@ -535,164 +535,186 @@ def backward_elimination(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT'
 """### Test Data"""
 
 #####################################################################
-# ################          COMBINE FUNCTION            ###############
-# #####################################################################
+################         TESTING ON TEST DATA         ###############
+#####################################################################
 
-# ################          TEST DATA 1            ###############
+###################          TEST DATA 1            #################
 
 
-# dataset_path = 'CS170_small_Data__32.txt'
-# print('------------------ Time Estimation ----------------------')
-# estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-#                   k_val=2, sampling=False, sampling_factor=1)
+def run_test_data_1(forward = True, backward = True):
 
-# print()
-# print('------------------ Forward Selection ----------------------')
-# accuracy_map_forward_1 = forward_selection(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# plot_graphs(accuracy_map_forward_1)
+    dataset_path = 'CS170_small_Data__32.txt'
+    print('------------------ Time Estimation ----------------------')
+    estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+    print()
 
-# print()
-# print('------------------ Backward Elimination ----------------------')
-# accuracy_map_backward = backward_elimination(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# accuracy_map_updated_1 = np.array(accuracy_map_backward, dtype=object)
-# accuracy_map_updated_1[:, 0] = len(
-#     accuracy_map_updated_1) - accuracy_map_updated_1[:, 0]
-# plot_graphs(accuracy_map_updated_1)
+    if forward:
+        print('------------------ Forward Selection ----------------------')
+        accuracy_map_forward_1 = forward_selection(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        plot_graphs(accuracy_map_forward_1)
+        print()
 
-# ################          TEST DATA 2            ###############
+    if backward:
+        print('------------------ Backward Elimination ----------------------')
+        accuracy_map_backward = backward_elimination(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        accuracy_map_updated_1 = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_1[:, 0] = len(
+            accuracy_map_updated_1) - accuracy_map_updated_1[:, 0]
+        plot_graphs(accuracy_map_updated_1)
 
-# dataset_path = 'CS170_small_Data__33.txt'
-# print('------------------ Time Estimation ----------------------')
-# estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-#                   k_val=2, sampling=False, sampling_factor=1)
+###################         TEST DATA 2            ##################
 
-# print()
-# print('------------------ Forward Selection ----------------------')
-# accuracy_map_forward_2 = forward_selection(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# plot_graphs(accuracy_map_forward_2)
+def run_test_data_2(forward = True, backward = True):
+    dataset_path = 'CS170_small_Data__33.txt'
+    print('------------------ Time Estimation ----------------------')
+    estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+    print()
 
-# print()
-# print('------------------ Backward Elimination ----------------------')
-# accuracy_map_backward = backward_elimination(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# accuracy_map_updated_2 = np.array(accuracy_map_backward, dtype=object)
-# accuracy_map_updated_2[:, 0] = len(
-#     accuracy_map_updated_2) - accuracy_map_updated_2[:, 0]
-# plot_graphs(accuracy_map_updated_2)
+    if forward:
+        print('------------------ Forward Selection ----------------------')
+        accuracy_map_forward_2 = forward_selection(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        plot_graphs(accuracy_map_forward_2)
 
-# ################          TEST DATA 3            ###############
+        print()
+    
+    if backward:
+        print('------------------ Backward Elimination ----------------------')
+        accuracy_map_backward = backward_elimination(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        accuracy_map_updated_2 = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_2[:, 0] = len(
+            accuracy_map_updated_2) - accuracy_map_updated_2[:, 0]
+        plot_graphs(accuracy_map_updated_2)
 
-# dataset_path = 'CS170_large_Data__33.txt'
-# print('------------------ Time Estimation ----------------------')
-# estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-#                   k_val=2, sampling=False, sampling_factor=1)
+##################          TEST DATA 3            ##################
 
-# print()
-# print('------------------ Forward Selection ----------------------')
-# accuracy_map_forward_3 = forward_selection(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# plot_graphs(accuracy_map_forward_3)
+def run_test_data_3(forward = True, backward = True):
+    dataset_path = 'CS170_large_Data__33.txt'
+    print('------------------ Time Estimation ----------------------')
+    estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+    print()
 
-# print()
-# print('------------------ Backward Elimination ----------------------')
-# accuracy_map_backward = backward_elimination(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# accuracy_map_updated_3 = np.array(accuracy_map_backward, dtype=object)
-# accuracy_map_updated_3[:, 0] = len(
-#     accuracy_map_updated_3) - accuracy_map_updated_3[:, 0]
-# plot_graphs(accuracy_map_updated_3)
+    if forward:
+        print('------------------ Forward Selection ----------------------')
+        accuracy_map_forward_3 = forward_selection(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        plot_graphs(accuracy_map_forward_3)
+        print()
 
-# ################          TEST DATA 4            ###############
+    if backward:
+        print('------------------ Backward Elimination ----------------------')
+        accuracy_map_backward = backward_elimination(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        accuracy_map_updated_3 = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_3[:, 0] = len(
+            accuracy_map_updated_3) - accuracy_map_updated_3[:, 0]
+        plot_graphs(accuracy_map_updated_3)
 
-# dataset_path = 'CS170_large_Data__33.txt'
-# print('------------------ Time Estimation ----------------------')
-# estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-#                   k_val=2, sampling=False, sampling_factor=1)
+##################          TEST DATA 4            ##################
 
-# print()
-# print('------------------ Forward Selection ----------------------')
-# accuracy_map_forward_4 = forward_selection(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# plot_graphs(accuracy_map_forward_4)
+def run_test_data_4(forward = True, backward = True):
+    dataset_path = 'CS170_large_Data__33.txt'
+    print('------------------ Time Estimation ----------------------')
+    estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+    print()
 
-# print()
-# print('------------------ Backward Elimination ----------------------')
-# accuracy_map_backward = backward_elimination(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# accuracy_map_updated_4 = np.array(accuracy_map_backward, dtype=object)
-# accuracy_map_updated_4[:, 0] = len(
-#     accuracy_map_updated_4) - accuracy_map_updated_4[:, 0]
-# plot_graphs(accuracy_map_updated_4)
+    if forward:
+        print('------------------ Forward Selection ----------------------')
+        accuracy_map_forward_4 = forward_selection(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        plot_graphs(accuracy_map_forward_4)
+
+        print()
+
+    if backward:
+        print('------------------ Backward Elimination ----------------------')
+        accuracy_map_backward = backward_elimination(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        accuracy_map_updated_4 = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_4[:, 0] = len(
+            accuracy_map_updated_4) - accuracy_map_updated_4[:, 0]
+        plot_graphs(accuracy_map_updated_4)
+
 
 """### Selected Data"""
 
-# #####################################################################
-# ################       Working on selected Data       ###############
-# #####################################################################
+#####################################################################
+################       Working on selected Data       ###############
+#####################################################################
 
-# ################          SELECTED DATA 1            ###############
-# dataset_path = small_dataset_path
-# estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-#                   k_val=2, sampling=False, sampling_factor=1)
+#################          SELECTED DATA 1            ###############
+def run_selected_data_1(forward = True, backward = True):
+    dataset_path = small_dataset_path
+    estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+    print()
+    
+    if forward:
+        accuracy_map_forward_5 = forward_selection(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        plot_graphs(accuracy_map_forward_5, 'Forward Selection', 'Small')
+        print()
 
-# accuracy_map_forward_5 = forward_selection(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# plot_graphs(accuracy_map_forward_5, 'Forward Selection', 'Small')
+    if backward:
+        accuracy_map_backward = backward_elimination(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        accuracy_map_updated_5 = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_5[:, 0] = len(
+            accuracy_map_updated_5) - accuracy_map_updated_5[:, 0]
+        plot_graphs(accuracy_map_updated_5, 'Backward Elimination', 'Small')
 
-# accuracy_map_backward = backward_elimination(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# accuracy_map_updated_5 = np.array(accuracy_map_backward, dtype=object)
-# accuracy_map_updated_5[:, 0] = len(
-#     accuracy_map_updated_5) - accuracy_map_updated_5[:, 0]
-# plot_graphs(accuracy_map_updated_5, 'Backward Elimination', 'Small')
+#################          SELECTED DATA 2            ###############
+def run_selected_data_2(forward = True, backward = True):
+    dataset_path = large_dataset_path
+    estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+    print()
 
-# ################          SELECTED DATA 6            ###############
-# dataset_path = large_dataset_path
-# estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-#                   k_val=2, sampling=False, sampling_factor=1)
+    if forward:
+        accuracy_map_forward_6 = forward_selection(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        plot_graphs(accuracy_map_forward_6, 'Forward Selection', 'Large')
+        print()
 
-# accuracy_map_forward_6 = forward_selection(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# plot_graphs(accuracy_map_forward_6, 'Forward Selection', 'Large')
+    if backward:
+        accuracy_map_backward = backward_elimination(
+            dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
+        accuracy_map_updated_6 = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_6[:, 0] = len(
+            accuracy_map_updated_6) - accuracy_map_updated_6[:, 0]
+        plot_graphs(accuracy_map_updated_6, 'Backward Elimination', 'Large')
 
-# accuracy_map_backward = backward_elimination(
-#     dataset_path, validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1)
-# accuracy_map_updated_6 = np.array(accuracy_map_backward, dtype=object)
-# accuracy_map_updated_6[:, 0] = len(
-#     accuracy_map_updated_6) - accuracy_map_updated_6[:, 0]
-# plot_graphs(accuracy_map_updated_6, 'Backward Elimination', 'Large')
+#################          SELECTED DATA 3            ###############
+def run_selected_data_3(forward = True, backward = True):
 
-################          SELECTED DATA 7            ###############
-dataset_path = xxx_large_dataset_path
-estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-                  k_val=2, sampling=False, sampling_factor=1)
-print ()
-estimate_run_time(dataset_path, validation_type='K_FOLD_VALIDATION',
-                  k_val=2, sampling=False, sampling_factor=1)
-print ()
-estimate_run_time(dataset_path, validation_type='LEAVE_ONE_OUT',
-                  k_val=2, sampling=True, sampling_factor=0.3)
-print ()
-estimate_run_time(dataset_path, validation_type='K_FOLD_VALIDATION',
-                  k_val=2, sampling=True, sampling_factor=0.3)
-print ()
+    dataset_path = xxx_large_dataset_path
+    estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT',
+                    k_val=2, sampling=False, sampling_factor=1)
+    print ()
+    estimate_run_time(dataset_path, sep='  ', validation_type='K_FOLD_VALIDATION',
+                    k_val=2, sampling=False, sampling_factor=1)
+    print ()
+    estimate_run_time(dataset_path, sep='  ', validation_type='LEAVE_ONE_OUT',
+                    k_val=2, sampling=True, sampling_factor=0.3)
+    print ()
+    estimate_run_time(dataset_path, sep='  ', validation_type='K_FOLD_VALIDATION',
+                    k_val=2, sampling=True, sampling_factor=0.3)
+    print ()
 
-# accuracy_map_forward_7 = forward_selection(
-#     dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.3)
-# plot_graphs(accuracy_map_forward_7, 'Forward Selection', 'XXXLarge')
+    if forward:
+        accuracy_map_forward_7 = forward_selection(
+            dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.3)
+        plot_graphs(accuracy_map_forward_7, 'Forward Selection', 'XXXLarge')
+        print()
 
-accuracy_map_backward = backward_elimination(
-    dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.3)
-accuracy_map_updated_7 = np.array(accuracy_map_backward, dtype=object)
-accuracy_map_updated_7[:, 0] = len(
-    accuracy_map_updated_7) - accuracy_map_updated_7[:, 0]
-plot_graphs(accuracy_map_updated_7, 'Backward Elimination', 'XXXLarge')
-
-
-
+    if backward:
+        accuracy_map_backward = backward_elimination(
+            dataset_path, validation_type='K_FOLD_VALIDATION', k_val=2, sampling=True, sampling_factor=0.3)
+        accuracy_map_updated_7 = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_7[:, 0] = len(
+            accuracy_map_updated_7) - accuracy_map_updated_7[:, 0]
+        plot_graphs(accuracy_map_updated_7, 'Backward Elimination', 'XXXLarge')
 
 """### UI"""
 
@@ -729,52 +751,69 @@ def main_block():
         sampling_factor=0.5
 
     if algorithm_choice == 1:
-        estimate_run_time(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
+        estimate_run_time(selected_dataset, sep='  ', validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
         accuracy_map_forward_6 = forward_selection(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
         plot_graphs(accuracy_map_forward_6)
     else:
-        estimate_run_time(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
+        estimate_run_time(selected_dataset, sep='  ', validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
         accuracy_map_backward = backward_elimination(selected_dataset, validation_type=validation_type, k_val=k_val, sampling=sampling, sampling_factor=sampling_factor)
         accuracy_map_updated_7 = np.array(accuracy_map_backward, dtype=object)
         accuracy_map_updated_7[:, 0] = len(accuracy_map_updated_7) - accuracy_map_updated_7[: ,0]
         plot_graphs(accuracy_map_updated_7)
 
-main_block()
 
 """### Real World Dataset"""
 
 # https://github.com/allisonhorst/palmerpenguins
 
-real_world_path = 'realworld.csv'
-data = sns.load_dataset("penguins") # load penguins dataset from seaborn
-data = data.dropna() # drop samples with missing values (NaN)
+def real_world(forward = True, backward = True):
+    real_world_path = 'realworld.csv'
+    data = sns.load_dataset("penguins") # load penguins dataset from seaborn
+    data = data.dropna() # drop samples with missing values (NaN)
 
-columns_to_number_map = {}
-number_to_columns_map = {}
+    columns_to_number_map = {}
+    number_to_columns_map = {}
 
-for idx, col in enumerate(data.columns):
-    columns_to_number_map[col] = idx
-    number_to_columns_map[idx] = col
+    for idx, col in enumerate(data.columns):
+        columns_to_number_map[col] = idx
+        number_to_columns_map[idx] = col
 
-LE = LabelEncoder()
-data['species'] = LE.fit_transform(data['species'])
-data['island'] = LE.fit_transform(data['island'])
-data['sex'] = LE.fit_transform(data['sex'])
+    LE = LabelEncoder()
+    data['species'] = LE.fit_transform(data['species'])
+    data['island'] = LE.fit_transform(data['island'])
+    data['sex'] = LE.fit_transform(data['sex'])
 
-data.to_csv(f'{base_path}/{real_world_path}',index=False, header=None,sep=' ')
+    data.to_csv(f'{base_path}/{real_world_path}',index=False, header=None,sep=' ')
+    estimate_run_time(real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT',
+                    k_val=2, sampling=False, sampling_factor=1)
+    print()
 
-estimate_run_time(real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT',
-                  k_val=2, sampling=False, sampling_factor=1)
+    if forward:
+        accuracy_map_forward_real = forward_selection(
+            real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1, prune_run = False)
+        print (number_to_columns_map)
+        plot_graphs(accuracy_map_forward_real, 'Forward Selection', 'Real World')
+        print()
 
-accuracy_map_forward_real = forward_selection(
-    real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1, prune_run = False)
-print (number_to_columns_map)
-plot_graphs(accuracy_map_forward_real, 'Forward Selection', 'Real World')
+    if backward:
+        accuracy_map_backward = backward_elimination(
+            real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1, prune_run = False)
+        accuracy_map_updated_real = np.array(accuracy_map_backward, dtype=object)
+        accuracy_map_updated_real[:, 0] = len(
+            accuracy_map_updated_real) - accuracy_map_updated_real[:, 0]
+        print (number_to_columns_map)
+        plot_graphs(accuracy_map_updated_real, 'Backward Elimination', 'Real World')
 
-accuracy_map_backward = backward_elimination(
-    real_world_path, sep=' ', validation_type='LEAVE_ONE_OUT', k_val=2, sampling=False, sampling_factor=1, prune_run = False)
-accuracy_map_updated_real = np.array(accuracy_map_backward, dtype=object)
-accuracy_map_updated_real[:, 0] = len(
-    accuracy_map_updated_real) - accuracy_map_updated_real[:, 0]
-print (number_to_columns_map)
-plot_graphs(accuracy_map_updated_real, 'Backward Elimination', 'Real World')
+
+#####################################################################
+####################       Function Calls         ###################
+#####################################################################
+# run_test_data_1()
+# run_test_data_2()
+# run_test_data_3()
+# run_test_data_4()
+# run_selected_data_1()
+# run_selected_data_2()
+# run_selected_data_3()
+# real_world()
+# main_block()

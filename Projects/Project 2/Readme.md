@@ -2,7 +2,7 @@
 
 Feature selection is a crucial step in machine learning, involving the identification of relevant and informative features from a dataset. Its importance lies in improving model performance, reducing overfitting, and enhancing interpretability. By selecting only the most influential factors, models achieve better accuracy, faster training times, and become more interpretable. Additionally, feature selection helps avoid overfitting and reduces storage and processing requirements, making models more feasible for deployment in resource-constrained environments.
 
-This project aims to identify the most relevant and irrelevant features through forward selection, backward elimination, and nearest neighbor search techniques. The purpose of this undertaking is to fulfill the course requirement for CS-205: Artificial Intelligence at UCR. By employing these methods, the project seeks to enhance the understanding and performance of artificial intelligence algorithms in feature selection, contributing to the overall knowledge and expertise of the students.
+This project aims to identify the most relevant and irrelevant features through forward selection, backward elimination, and nearest neighbor search techniques. The purpose of this undertaking is to fulfill the course requirement for CS-205: Artificial Intelligence at UCR. By employing these methods, the project seeks to enhance the understanding and performance of artificial intelligence algorithms in feature selection.
 
 ### Notes
 - The code is menu driven and can be run directly without changes.

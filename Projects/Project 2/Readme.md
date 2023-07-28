@@ -1,8 +1,10 @@
-Feature Selection using Nearest Neighbour.
+# Feature Selection using Nearest Neighbour.
 
-Project to find the most relevent and irrelevent features using forward selection and backward elimination and nearest neighbout search
-Completed For CS-205: Artificial Intelligence at UCR.
+Feature selection is a crucial step in machine learning, involving the identification of relevant and informative features from a dataset. Its importance lies in improving model performance, reducing overfitting, and enhancing interpretability. By selecting only the most influential factors, models achieve better accuracy, faster training times, and become more interpretable. Additionally, feature selection helps avoid overfitting and reduces storage and processing requirements, making models more feasible for deployment in resource-constrained environments.
 
+This project aims to identify the most relevant and irrelevant features through forward selection, backward elimination, and nearest neighbor search techniques. The purpose of this undertaking is to fulfill the course requirement for CS-205: Artificial Intelligence at UCR. By employing these methods, the project seeks to enhance the understanding and performance of artificial intelligence algorithms in feature selection, contributing to the overall knowledge and expertise of the students.
+
+### Notes
 - The code is menu driven and can be run directly without changes.
 - The code is extensible and can be run for any synthetic dataset, just need to enter call the function `run_test_data_1` and update the variable`dataset_path` with new dataset.
 - The code can run any of the test datasets using the functions `run_test_data_1`, `run_test_data_2`, `run_test_data_3` and `run_test_data_4`. By defaultm this is commented out.
